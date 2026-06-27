@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wizard</title>
+<meta name="description" content="Wizard — Tus finanzas, ordenadas.">
+<meta name="theme-color" content="#fffbf5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#08101f" media="(prefers-color-scheme: dark)">
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wizard">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- Icon: serif W on warm card, scales for any size -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23fffbf5'/%3E%3Ctext x='90' y='128' text-anchor='middle' font-family='Georgia,serif' font-size='130' font-weight='900' fill='%23ea580c'%3EW%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23fffbf5'/%3E%3Ctext x='90' y='128' text-anchor='middle' font-family='Georgia,serif' font-size='130' font-weight='900' fill='%23ea580c'%3EW%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Wizard","short_name":"Wizard","description":"Tus finanzas, ordenadas.","start_url":"./","scope":"./","display":"standalone","orientation":"portrait","background_color":"%23fffbf5","theme_color":"%23ea580c","icons":[{"src":"data:image/svg%2Bxml;utf8,%3Csvg xmlns%3D%27http%3A//www.w3.org/2000/svg%27 viewBox%3D%270 0 180 180%27%3E%3Crect width%3D%27180%27 height%3D%27180%27 rx%3D%2740%27 fill%3D%27%23fffbf5%27/%3E%3Ctext x%3D%2790%27 y%3D%27128%27 text-anchor%3D%27middle%27 font-family%3D%27Georgia%2Cserif%27 font-size%3D%27130%27 font-weight%3D%27900%27 fill%3D%27%23ea580c%27%3EW%3C/text%3E%3C/svg%3E","sizes":"any","type":"image/svg+xml","purpose":"any"}]}'>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#fffbf5;--card:#fff;--border:#f5f5f4;--text:#1c1917;--muted:#a8a29e;
+  --accent:#ea580c;
+  --blue:#3b82f6;--blue-bg:#eff6ff;
+  --orange:#ea580c;--orange-bg:#fff7ed;
+  --green:#10b981;--green-bg:#f0fdf4;
+  --red:#dc2626;--red-bg:#fef2f2;--yellow:#d97706;--purple:#a855f7;--purple-bg:#fdf4ff;
+  --r:14px;--shadow:0 1px 8px rgba(0,0,0,.06);
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+.wrap{max-width:700px;margin:0 auto;padding:16px}
+
+/* Header */
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 2px 18px;margin-bottom:14px;gap:10px}
+.hdr-month{font-size:.72rem;color:var(--muted);font-weight:500;text-transform:capitalize}
+.hdr-title{font-family:Georgia,'Palatino Linotype',serif;font-size:1.5rem;font-weight:700;line-height:1.15;margin-top:2px;color:var(--text)}
+.hdr-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
+.hdr-orb{width:38px;height:38px;background:var(--card);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;box-shadow:var(--shadow);border:none;font-family:inherit;color:var(--text);transition:transform .12s}
+.hdr-orb:hover{transform:scale(1.06)}
+
+/* Buttons */
+.btn{font-family:inherit;font-size:.85rem;border-radius:8px;border:none;padding:8px 14px;cursor:pointer;font-weight:600;transition:opacity .15s;line-height:1}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{opacity:.88}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-icon{background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 10px;border-radius:8px;cursor:pointer;font-size:.95rem;line-height:1}
+.btn-icon:hover{background:var(--bg)}
+.btn-sm{padding:4px 10px;font-size:.75rem}
+.btn-danger{background:var(--red);color:#fff;border:none}
+.btn-danger:hover{opacity:.88}
+.btn-success{background:var(--green);color:#fff;border:none}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+
+/* Key numbers */
+.kn-row{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-bottom:4px}
+.kn-row::-webkit-scrollbar{display:none}
+.kn{border-radius:18px;padding:14px 13px;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;flex-shrink:0;width:134px}
+.kn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.13)}
+.kn-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px}
+.kn-val{font-size:1.35rem;font-weight:900;font-family:Georgia,'Palatino Linotype',serif;line-height:1}
+.kn-hint{font-size:.62rem;margin-top:6px;opacity:.8}
+/* Legacy — kept for wizard summary previews */
+.kn-blue{background:var(--blue-bg);color:var(--blue)}
+.kn-green{background:var(--green-bg);color:var(--green)}
+.kn-purple{background:var(--purple-bg);color:var(--purple)}
+.kn-crimson{background:var(--red-bg,#fef2f2);color:var(--red)}
+.kn-summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;font-size:.84rem}
+.kn-summary strong{font-weight:700;font-family:Georgia,'Palatino Linotype',serif;font-size:1rem;flex-shrink:0;white-space:nowrap}
+.kn-summary span{min-width:0}
+/* Per-card design tokens */
+.kn-w1{background:linear-gradient(135deg,#fff7ed,#fed7aa);color:#c2410c;border:1px solid rgba(234,88,12,.12)}
+.kn-w2{background:linear-gradient(135deg,#f0fdf4,#bbf7d0);color:#065f46;border:1px solid rgba(16,185,129,.12)}
+.kn-w3{background:linear-gradient(135deg,#fdf4ff,#e9d5ff);color:#6b21a8;border:1px solid rgba(168,85,247,.12)}
+.kn-w4{background:linear-gradient(135deg,#eff6ff,#bfdbfe);color:#1d4ed8;border:1px solid rgba(59,130,246,.12)}
+.kn-w1 .kn-val,.kn-w2 .kn-val,.kn-w3 .kn-val,.kn-w4 .kn-val{color:var(--text)}
+
+/* Breakdown panel */
+.breakdown{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px;margin-bottom:12px;display:none}
+.breakdown.open{display:block}
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.84rem;border-bottom:1px solid var(--border)}
+.breakdown-row:last-child{border-bottom:none;font-weight:700;padding-top:8px;margin-top:2px}
+.breakdown-label{color:var(--muted)}
+.breakdown-val{font-weight:600}
+
+/* Progress bar */
+.wbar{padding:14px 16px}
+.wbar-head{display:flex;justify-content:space-between;align-items:baseline;font-size:.78rem;color:var(--muted);margin-bottom:10px}
+.wbar-rem{font-family:Georgia,'Palatino Linotype',serif;font-size:1.15rem;font-weight:700;color:var(--accent)}
+.wbar-track{background:var(--border);border-radius:99px;height:6px;overflow:hidden}
+.wbar-fill{height:100%;border-radius:99px;transition:width .3s}
+.fill-ok{background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#fff))}
+.fill-warn{background:var(--yellow)}
+.fill-danger{background:var(--red)}
+.wbar-foot{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:5px}
+
+/* Form */
+.form-row{display:grid;grid-template-columns:120px 1fr 110px;gap:8px;margin-bottom:8px}
+.form-row2{display:grid;grid-template-columns:1fr 120px;gap:8px}
+.quick-add{padding:14px}
+.quick-add .sec-title{margin-bottom:10px}
+input,select,textarea{font-family:inherit;font-size:.88rem;border-radius:8px;border:1px solid var(--border);padding:8px 10px;width:100%;outline:none;color:var(--text);background:var(--card)}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(234,88,12,.12)}
+input[readonly]{background:var(--bg);color:var(--muted)}
+.sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:12px}
+
+/* Bottom nav (replaces top tabs) */
+.bnav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom)) 4px;z-index:50;box-shadow:0 -4px 16px rgba(0,0,0,.04)}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border:none;background:transparent;cursor:pointer;font-family:inherit;color:var(--muted);min-width:0}
+.bnav-icon{font-size:19px;line-height:1}
+.bnav-label{font-size:.6rem;font-weight:700;letter-spacing:.02em}
+.bnav-item.active{color:var(--accent)}
+.bnav-item.active .bnav-label{font-weight:800}
+.bnav-item:disabled,.bnav-item.hidden{display:none}
+
+/* Expense list */
+.exp-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border);gap:8px}
+.exp-item:last-child{border-bottom:none}
+.exp-code{font-size:.68rem;color:var(--muted);font-family:monospace}
+.exp-desc{font-size:.88rem;font-weight:600;margin:2px 0}
+.exp-meta{font-size:.74rem;color:var(--muted)}
+.exp-right{text-align:right;flex-shrink:0}
+.exp-amount{font-size:.92rem;font-weight:700}
+.badge{display:inline-block;font-size:.62rem;padding:2px 6px;border-radius:4px;font-weight:700;text-transform:uppercase;margin-left:4px;vertical-align:middle}
+.b-semanal{background:#dbeafe;color:#1d4ed8}
+.b-libre{background:#dcfce7;color:#15803d}
+.b-feria{background:#be185d;color:#fff}
+.b-feria2{background:#9333ea;color:#fff}
+.b-feria3{background:#0891b2;color:#fff}
+.b-feria4{background:#b45309;color:#fff}
+/* Historial status badges */
+.badge-mes-cerrado{font-size:.68rem;background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:4px;font-weight:700}
+.badge-mes-activo{font-size:.68rem;background:#dbeafe;color:#1d4ed8;padding:2px 6px;border-radius:4px;font-weight:700}
+.b-fijo{background:#f3e8ff;color:#7c3aed}
+
+/* Alert */
+.alert{border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:.83rem;line-height:1.5}
+.alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.alert-danger{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.alert-info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+
+/* Week rows */
+.wrow{padding:10px 0;border-bottom:1px solid var(--border)}
+.wrow:last-child{border-bottom:none}
+.wrow-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:.83rem}
+.wrow-dates{font-size:.75rem;color:var(--muted);margin-bottom:6px}
+.wrow-foot{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:4px}
+.chip{font-size:.7rem;padding:2px 7px;border-radius:4px;font-weight:700}
+.chip-current{background:var(--orange-bg);color:var(--accent)}
+.chip-surplus{color:var(--green);font-weight:700}
+.chip-overage{color:var(--red);font-weight:700}
+
+/* Fixed expenses */
+.fijo-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.fijo-item:last-child{border-bottom:none}
+.fijo-item input[type=checkbox]{width:17px;height:17px;cursor:pointer;accent-color:var(--accent);flex-shrink:0}
+.fijo-name{flex:1;font-size:.88rem}
+.fijo-amount{font-size:.88rem;font-weight:600;margin-right:8px}
+.fijo-item.paid .fijo-name{text-decoration:line-through;color:var(--muted)}
+.group-header{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px}
+.group-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.group-total{font-size:.8rem;color:var(--muted)}
+
+/* Feria */
+.feria-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.feria-item:last-child{border-bottom:none}
+.status-paid{color:var(--green);font-weight:700;font-size:.82rem}
+.status-pend{color:var(--orange);font-size:.82rem}
+.status-next{color:var(--muted);font-size:.82rem}
+
+/* Stats */
+.stat-bar-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:.84rem}
+.stat-bar-row:last-child{border-bottom:none}
+.stat-emoji{font-size:1rem;width:22px;flex-shrink:0}
+.stat-name{flex:1;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat-track{width:80px;background:var(--border);border-radius:99px;height:6px;flex-shrink:0}
+.stat-fill{height:100%;border-radius:99px;background:var(--accent)}
+.stat-amount{font-weight:600;min-width:70px;text-align:right;font-size:.82rem}
+.stat-pct{font-size:.72rem;color:var(--muted);min-width:34px;text-align:right}
+.stat-block{margin-bottom:16px}
+.stat-block-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:10px}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px;opacity:0;pointer-events:none;transition:opacity .18s}
+.overlay.open{opacity:1;pointer-events:auto}
+.overlay .modal{transform:translateY(10px) scale(.97);opacity:0;transition:transform .18s,opacity .18s}
+.overlay.open .modal{transform:none;opacity:1}
+.modal{background:var(--card);border-radius:16px;padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-lg{max-width:560px}
+.modal h2{font-size:1.08rem;margin-bottom:3px}
+.modal .sub{font-size:.82rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.mfooter{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;margin-top:14px}
+.label:first-of-type,.label.first{margin-top:0}
+
+/* Settings tabs */
+.stabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px}
+.stab{padding:8px 14px;border:none;background:transparent;font-size:.83rem;color:var(--muted);cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px}
+.stab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+
+/* Summary table */
+.stbl{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+.stbl td{padding:7px 4px;border-bottom:1px solid var(--border)}
+.stbl td:last-child{text-align:right;font-weight:600}
+.stbl tr.total td{border-top:2px solid var(--border);border-bottom:none;font-weight:800;font-size:.9rem}
+
+/* Help */
+.help-section{margin-bottom:20px}
+.help-section h3{font-size:.88rem;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.help-section p,.help-section li{font-size:.83rem;color:var(--muted);line-height:1.6}
+.help-section ul{padding-left:16px}
+.help-section code{background:var(--bg);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:.82rem;color:var(--text)}
+
+/* Cuotas */
+.cuota-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.84rem}
+.cuota-item:last-child{border-bottom:none}
+.cuota-name{flex:1;font-weight:500}
+.cuota-info{color:var(--muted);font-size:.78rem}
+.cuota-amt{font-weight:600;margin-right:6px}
+
+/* Misc */
+.hidden{display:none!important}
+.divider{margin:12px 0 4px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.empty{text-align:center;padding:28px 16px;color:var(--muted);font-size:.88rem}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:10px}
+.empty-state .ico{font-size:2.8rem;margin-bottom:4px}
+.empty-state h2{font-size:1.25rem}
+.empty-state p{color:var(--muted);font-size:.88rem;max-width:280px;line-height:1.5}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.text-muted{color:var(--muted)}
+.text-green{color:var(--green)}
+.text-red{color:var(--red)}
+.mt-1{margin-top:6px}
+.mt-2{margin-top:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:600;color:#fff;z-index:300;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 32px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast-ok{background:var(--green)}
+.toast-danger{background:var(--red)}
+.toast-warn{background:var(--yellow);color:#1e293b}
+
+/* Tab panel fade */
+#tab-gastos,#tab-semanas,#tab-fijos,#tab-feria,#tab-stats{transition:opacity .14s}
+
+@media(max-width:480px){
+  .form-row{grid-template-columns:95px 1fr 95px}
+  .kn-hint{display:none}
+}
+
+/* ── DARK MODE ─────────────────────────────────────────────────────────────── */
+/* Token block reused by auto and manual dark */
+.dark-tokens{
+  --bg:#08101f;--card:#111d30;--border:#1e293b;--text:#f1f5f9;--muted:#475569;
+  --accent:#38bdf8;
+  --blue:#38bdf8;--blue-bg:#0c2a4a;
+  --orange:#fb923c;--orange-bg:#1a0e02;
+  --green:#34d399;--green-bg:#0a2318;
+  --red:#f87171;--red-bg:#200808;--yellow:#fbbf24;--purple:#c4b5fd;--purple-bg:#1a0d38;
+  --shadow:none;
+}
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#08101f;--card:#111d30;--border:#1e293b;--text:#f1f5f9;--muted:#475569;
+    --accent:#38bdf8;
+    --blue:#38bdf8;--blue-bg:#0c2a4a;
+    --orange:#fb923c;--orange-bg:#1a0e02;
+    --green:#34d399;--green-bg:#0a2318;
+    --red:#f87171;--red-bg:#200808;--yellow:#fbbf24;--purple:#c4b5fd;--purple-bg:#1a0d38;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#08101f;--card:#111d30;--border:#1e293b;--text:#f1f5f9;--muted:#475569;
+  --accent:#38bdf8;
+  --blue:#38bdf8;--blue-bg:#0c2a4a;
+  --orange:#fb923c;--orange-bg:#1a0e02;
+  --green:#34d399;--green-bg:#0a2318;
+  --red:#f87171;--red-bg:#200808;--yellow:#fbbf24;--purple:#c4b5fd;--purple-bg:#1a0d38;
+  --shadow:none;
+}
+/* Card-level dark overrides — apply in both auto-dark (when no manual light override) and manual dark */
+@media(prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .kn-w1{background:#0c2a4a;color:#7dd3fc;border:none}
+  :root:not([data-theme="light"]) .kn-w2{background:#0a2318;color:#6ee7b7;border:none}
+  :root:not([data-theme="light"]) .kn-w3{background:#1a0d38;color:#c4b5fd;border:none}
+  :root:not([data-theme="light"]) .kn-w4{background:#1a1000;color:#fde68a;border:none}
+  :root:not([data-theme="light"]) .kn-w1 .kn-val,
+  :root:not([data-theme="light"]) .kn-w2 .kn-val,
+  :root:not([data-theme="light"]) .kn-w3 .kn-val,
+  :root:not([data-theme="light"]) .kn-w4 .kn-val{color:#fff}
+  :root:not([data-theme="light"]) .kn-w1 .kn-hint{color:#38bdf8}
+  :root:not([data-theme="light"]) .kn-w2 .kn-hint{color:#34d399}
+  :root:not([data-theme="light"]) .kn-w3 .kn-hint{color:#a78bfa}
+  :root:not([data-theme="light"]) .kn-w4 .kn-hint{color:#fbbf24}
+  :root:not([data-theme="light"]) .kn-crimson{background:#200808;color:var(--red);border:none}
+  :root:not([data-theme="light"]) .alert-warn{background:#2a0e02;border-color:#7c2d12;color:#fed7aa}
+  :root:not([data-theme="light"]) .alert-danger{background:#200808;border-color:#7f1d1d;color:#fecaca}
+  :root:not([data-theme="light"]) .alert-info{background:#0a1428;border-color:#1e3a8a;color:#bfdbfe}
+  :root:not([data-theme="light"]) .b-semanal{background:#0c2a4a;color:#38bdf8}
+  :root:not([data-theme="light"]) .b-libre{background:#0a2318;color:#34d399}
+  :root:not([data-theme="light"]) .b-fijo{background:#1a0d38;color:#c4b5fd}
+  :root:not([data-theme="light"]) .badge-mes-cerrado{background:#0a2318;color:#34d399}
+  :root:not([data-theme="light"]) .badge-mes-activo{background:#0c2a4a;color:#38bdf8}
+  :root:not([data-theme="light"]) .chip-current{background:#0c2a4a;color:#38bdf8}
+  :root:not([data-theme="light"]) .stat-fill{background:var(--accent)}
+  :root:not([data-theme="light"]) .toast-warn{color:#08101f}
+  :root:not([data-theme="light"]) input[readonly]{background:var(--bg)}
+}
+:root[data-theme="dark"] .kn-w1{background:#0c2a4a;color:#7dd3fc;border:none}
+:root[data-theme="dark"] .kn-w2{background:#0a2318;color:#6ee7b7;border:none}
+:root[data-theme="dark"] .kn-w3{background:#1a0d38;color:#c4b5fd;border:none}
+:root[data-theme="dark"] .kn-w4{background:#1a1000;color:#fde68a;border:none}
+:root[data-theme="dark"] .kn-w1 .kn-val,
+:root[data-theme="dark"] .kn-w2 .kn-val,
+:root[data-theme="dark"] .kn-w3 .kn-val,
+:root[data-theme="dark"] .kn-w4 .kn-val{color:#fff}
+:root[data-theme="dark"] .kn-w1 .kn-hint{color:#38bdf8}
+:root[data-theme="dark"] .kn-w2 .kn-hint{color:#34d399}
+:root[data-theme="dark"] .kn-w3 .kn-hint{color:#a78bfa}
+:root[data-theme="dark"] .kn-w4 .kn-hint{color:#fbbf24}
+:root[data-theme="dark"] .kn-crimson{background:#200808;color:var(--red);border:none}
+:root[data-theme="dark"] .alert-warn{background:#2a0e02;border-color:#7c2d12;color:#fed7aa}
+:root[data-theme="dark"] .alert-danger{background:#200808;border-color:#7f1d1d;color:#fecaca}
+:root[data-theme="dark"] .alert-info{background:#0a1428;border-color:#1e3a8a;color:#bfdbfe}
+:root[data-theme="dark"] .b-semanal{background:#0c2a4a;color:#38bdf8}
+:root[data-theme="dark"] .b-libre{background:#0a2318;color:#34d399}
+:root[data-theme="dark"] .b-fijo{background:#1a0d38;color:#c4b5fd}
+:root[data-theme="dark"] .badge-mes-cerrado{background:#0a2318;color:#34d399}
+:root[data-theme="dark"] .badge-mes-activo{background:#0c2a4a;color:#38bdf8}
+:root[data-theme="dark"] .chip-current{background:#0c2a4a;color:#38bdf8}
+:root[data-theme="dark"] .stat-fill{background:var(--accent)}
+:root[data-theme="dark"] .toast-warn{color:#08101f}
+:root[data-theme="dark"] input[readonly]{background:var(--bg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hdr">
+    <div>
+      <div class="hdr-month" id="hdr-month"></div>
+      <div class="hdr-title" id="hdr-greeting">Wizard</div>
+    </div>
+    <div class="hdr-actions">
+      <button class="hdr-orb" id="theme-orb" onclick="toggleTheme()" title="Cambiar tema">☀️</button>
+    </div>
+  </div>
+
+  <div id="alerts"></div>
+
+  <div id="no-month" class="empty-state hidden">
+    <div class="ico">📅</div>
+    <h2>Sin mes activo</h2>
+    <p>Presiona "+ Nuevo mes" para configurar el mes y empezar a registrar gastos.</p>
+  </div>
+
+  <div id="main" class="hidden">
+    <div class="kn-row">
+      <div class="kn kn-w1" onclick="toggleBreakdown('semana')" id="kn-semana-card">
+        <div class="kn-label">📅 Esta semana</div>
+        <div class="kn-val" id="kn-semana"></div>
+        <div class="kn-hint" id="kn-semana-hint">Sem actual</div>
+      </div>
+      <div class="kn kn-w2" onclick="toggleBreakdown('libre')" id="kn-libre-card">
+        <div class="kn-label">💚 Dinero libre</div>
+        <div class="kn-val" id="kn-libre"></div>
+        <div class="kn-hint">Sin restricción</div>
+      </div>
+      <div class="kn kn-w3" onclick="toggleBreakdown('comp')" id="kn-comp-card">
+        <div class="kn-label">🔒 Comprometido</div>
+        <div class="kn-val" id="kn-comp"></div>
+        <div class="kn-hint">Reservado</div>
+      </div>
+      <div class="kn kn-w4" onclick="toggleBreakdown('cuenta')" id="kn-cuenta-card">
+        <div class="kn-label">🏦 En tu cuenta</div>
+        <div class="kn-val" id="kn-cuenta"></div>
+        <div class="kn-hint">Saldo real</div>
+      </div>
+    </div>
+
+    <div class="breakdown" id="breakdown-panel"></div>
+
+    <div class="card wbar">
+      <div class="wbar-head">
+        <span id="wbar-label"></span>
+        <span class="wbar-rem" id="wbar-rem"></span>
+      </div>
+      <div class="wbar-track"><div class="wbar-fill" id="wbar-fill" style="width:0%"></div></div>
+      <div class="wbar-foot"><span id="wbar-spent"></span><span id="wbar-budget"></span></div>
+    </div>
+
+    <div class="card quick-add">
+      <div class="sec-title">Registrar gasto</div>
+      <div class="form-row">
+        <input type="date" id="f-date">
+        <input type="text" id="f-desc" placeholder="Descripción" autocomplete="off">
+        <input type="number" id="f-amount" placeholder="Monto" min="1" inputmode="decimal">
+      </div>
+      <div class="form-row2">
+        <select id="f-budget" onchange="onBudgetChange()">
+          <option value="semanal">Semanal</option>
+        </select>
+        <button class="btn btn-primary" onclick="addExpense()">Registrar +</button>
+      </div>
+    </div>
+
+    <div class="card" id="tab-gastos"><div class="sec-title">Historial del mes</div><div id="list-gastos"></div></div>
+    <div class="card hidden" id="tab-semanas"><div class="sec-title">Semanas del mes</div><div id="list-semanas"></div></div>
+    <div class="card hidden" id="tab-fijos"><div id="list-fijos"></div></div>
+    <div class="card hidden" id="tab-feria"><div class="sec-title">Gastos dominicales</div><div id="list-feria"></div></div>
+    <div class="card hidden" id="tab-stats"><div id="list-stats"></div></div>
+  </div>
+</div>
+
+<nav class="bnav" id="bnav">
+  <button class="bnav-item active" data-tab="gastos" onclick="switchTab('gastos',this)">
+    <span class="bnav-icon">🏠</span><span class="bnav-label">Inicio</span>
+  </button>
+  <button class="bnav-item" data-tab="semanas" onclick="switchTab('semanas',this)">
+    <span class="bnav-icon">📅</span><span class="bnav-label">Semanas</span>
+  </button>
+  <button class="bnav-item" data-tab="fijos" onclick="switchTab('fijos',this)">
+    <span class="bnav-icon">📋</span><span class="bnav-label">Fijos</span>
+  </button>
+  <button class="bnav-item" id="tab-btn-feria" data-tab="feria" onclick="switchTab('feria',this)">
+    <span class="bnav-icon">🛒</span><span class="bnav-label">Domingos</span>
+  </button>
+  <button class="bnav-item" data-tab="stats" onclick="switchTab('stats',this)">
+    <span class="bnav-icon">📊</span><span class="bnav-label">Stats</span>
+  </button>
+  <button class="bnav-item" onclick="openMoreMenu()">
+    <span class="bnav-icon">⚙️</span><span class="bnav-label">Más</span>
+  </button>
+</nav>
+
+<div class="overlay" id="overlay-wizard"><div class="modal" id="modal-wizard"></div></div>
+<div class="overlay" id="overlay-settings"><div class="modal modal-lg" id="modal-settings"></div></div>
+<div class="overlay" id="overlay-help"><div class="modal modal-lg" id="modal-help"></div></div>
+<div class="overlay" id="overlay-edit"><div class="modal" id="modal-edit"></div></div>
+<div class="overlay" id="overlay-confirm">
+  <div class="modal" style="max-width:360px">
+    <h2 id="confirm-title"></h2>
+    <p class="sub" id="confirm-body" style="margin-bottom:0"></p>
+    <div class="mfooter">
+      <button class="btn btn-ghost" onclick="hideConfirm()">Cancelar</button>
+      <button class="btn" id="confirm-ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CALENDAR ──────────────────────────────────────────────────────────────────
+const MONTH_NAMES=['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function buildCal(year){
+  const cache=buildCal._c||(buildCal._c={});
+  if(cache[year])return cache[year];
+  function iso(d){return d.toISOString().split('T')[0]}
+  function firstMon(y,m){const d=new Date(y,m-1,1),dow=d.getDay();return new Date(y,m-1,1+(1-dow+7)%7)}
+  const res={};
+  for(let m=1;m<=12;m++){
+    const fm=firstMon(year,m);
+    const fmNext=m<12?firstMon(year,m+1):firstMon(year+1,1);
+    const w=Math.round((fmNext-fm)/6048e5);
+    const ls=new Date(+fmNext-864e5);
+    const sun=Array.from({length:w},(_,i)=>iso(new Date(+fm+(i*7+6)*864e5)));
+    let col=null;
+    if(fm.getMonth()!==m-1||fm.getDate()!==1){
+      const pm=m===1?12:m-1,py=m===1?year-1:year;
+      col={s:iso(new Date(+fm-7*864e5)),e:iso(new Date(+fm-864e5)),p:MONTH_NAMES[pm]+(py!==year?` ${py}`:'')};
+    }
+    res[m]={name:MONTH_NAMES[m],fm:iso(fm),ls:iso(ls),w,sun,col};
+  }
+  return cache[year]=res;
+}
+const CODES = ['','ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+const CATS = [
+  {e:'🍽️',n:'Alimentación',k:['almuerzo','comida','restaurant','restorán','restoran','café','cafe','delivery','supermercado','super','desayuno','cena','once','bebidas','bebida','snack','pizza','sushi','hamburgues','empanada','frutería','fruteria','colación','colacion','panadería','panaderia','mercado','feria','jumbo','lider','unimarc','tottus','ekono','santa isabel','santaisabel','jumb','liderr','pdq','mcdo','mcdonalds','kfc','burger','starbucks','juan maestro','dominos','pedidos ya','pedidosya','rappi','uber eats','ubereats','helado','dulce','pan','asado','carne','verdura','verduras','pollo','pescado','queso','leche','huevo','arroz','fideos','yogurt','galletas','asados','parrilla','picada','schop','schopería']},
+  {e:'🚌',n:'Movilización',k:['uber','taxi','metro','micro','bus','bencina','combustible','estacionamiento','cabify','bolt','didi','bip','colectivo','peaje','tag','tren','transporte','copec','shell','petrobras','enex','aramco','tag autopista','tag costanera','vialidad','mantención auto','mantencion auto','mecánico','mecanico','revisión técnica','revision tecnica','permiso circulación','permiso circulacion','seguro auto','soap','neumático','neumatico','aceite auto']},
+  {e:'🏥',n:'Salud',k:['farmacia','médico','medico','dentista','óptica','optica','remedio','medicamento','consulta','clínica','clinica','hospital','isapre','salcobrand','cruz verde','cruzverde','ahumada','dr simi','simi','kinesi','kinesiólogo','kinesiologo','psicólogo','psicologo','psiquiatra','exámenes','examen','laboratorio','vacuna','terapia','nutricionista','dermatólogo','dermatologo']},
+  {e:'👕',n:'Vestuario',k:['ropa','zapatilla','zapato','calzado','camisa','pantalon','pantalón','polera','chaqueta','jeans','vestido','accesorio','falabella','ripley','paris','h&m','zara','adidas','nike','puma','reebok','vans','calcetín','calcetin','calcetines','poleron','polerón','traje','calzoncillo','interior','sostén','soston','blusa']},
+  {e:'🎭',n:'Ocio',k:['cine','bar','evento','netflix','spotify','disney','hbo','prime','max','paramount','apple tv','appletv','teatro','concierto','trago','cerveza','vino','pisco','disco','carrete','salida','videojuego','videogame','steam','playstation','xbox','nintendo','twitch','youtube premium','ticket','entrada','espectáculo','espectaculo','show','festival','copa','copas']},
+  {e:'📱',n:'Telecomunicaciones',k:['movistar','claro','entel','wom','vtr','gtd','internet','wifi','plan celular','plan movil','plan móvil','teléfono','telefono','celular','recarga','prepago']},
+  {e:'💳',n:'Deudas',k:['cae','dividendo','crédito','credito','préstamo','prestamo','hipoteca','cuota tarjeta','tarjeta crédito','tarjeta credito','línea crédito','linea credito','pago tc']},
+  {e:'💪',n:'Deporte',k:['gym','bjj','fitness','pilates','yoga','natacion','natación','entrenamiento','crossfit','cancha','sparta','smartfit','smart fit','energy','spinning','running','tenis','arriendo cancha','padel','pádel']},
+  {e:'🏠',n:'Hogar',k:['limpieza','mueble','electrodoméstico','electrodomestico','arreglo','ferretería','ferreteria','decoración','decoracion','arriendo','alquiler','gas','agua','luz','electricidad','contribuciones','gastos comunes','gc','sodimac','easy','imperial','plomero','gasfiter','jardín','jardin','planta','toalla','sábanas','sabanas','almohada','vela','detergente','jabón','jabon','papel higiénico','papel higienico','escoba','trapeador']},
+  {e:'💻',n:'Tecnología',k:['claude','apple','amazon','google','microsoft','software','app','suscripción','suscripcion','dominio','hosting','github','openai','chatgpt','notion','figma','adobe','dropbox','icloud','one drive','onedrive','cable','cargador','audífonos','audifonos','mouse','teclado','pendrive','disco duro']},
+  {e:'🎓',n:'Educación',k:['libro','curso','udemy','coursera','academia','idioma','clase','colegio','universidad','matrícula','matricula','arancel','cuaderno','lápiz','lapiz','útiles','utiles','impresión','impresion']},
+  {e:'🎁',n:'Regalos',k:['regalo','donación','donacion','caridad','cumpleaños','cumpleanos','navidad','aniversario','flores','torta cumple']},
+  {e:'💼',n:'Servicios',k:['transferencia','depósito','deposito','retiro','comisión','comision','notaría','notaria','impuesto','sii','tesorería','tesoreria','peluquería','peluqueria','barbería','barberia','manicure','pedicure','spa','masaje','tintorería','tintoreria','lavandería','lavanderia','correo','chilexpress','starken']},
+  {e:'📦',n:'Sin categoría',k:[]},
+];
+
+let _statCat=null;
+function toggleStatCat(n){const md=activeMonth();if(!md)return;_statCat=_statCat===n?null:n;renderStats(md,calc(md));}
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+let _store=null;
+function load(){
+  if(_store)return _store;
+  try{_store=JSON.parse(localStorage.getItem('gf_v2')||'{}')}
+  catch(e){
+    console.error('gf_v2 parse failed',e);
+    _store={};
+    try{toast&&toast('Datos corruptos, se reinició el almacenamiento.','warn')}catch{}
+  }
+  // Auto-migrate: re-infer cat for expenses without one (after CATS dict updates)
+  if(_store.months){
+    let migrated=0;
+    for(const k in _store.months){
+      const md=_store.months[k];
+      (md.expenses||[]).forEach(e=>{
+        if(!e.cat||!e.cat.n||e.cat.n==='Sin categoría'||e.cat.n==='Otros'){
+          const newCat=inferCat(e.desc||'');
+          if(newCat&&newCat.n!=='Sin categoría'){e.cat=newCat;migrated++}
+        }
+      });
+    }
+    if(migrated>0)try{localStorage.setItem('gf_v2',JSON.stringify(_store))}catch{}
+  }
+  return _store;
+}
+function save(s){
+  _store=s;
+  try{localStorage.setItem('gf_v2',JSON.stringify(s));return true}
+  catch(e){
+    console.error('localStorage save failed',e);
+    const isQuota=e&&(e.name==='QuotaExceededError'||/quota/i.test(e.message||''));
+    try{toast(isQuota?'⚠️ Almacenamiento lleno. Exporta y limpia meses antiguos.':'⚠️ Error al guardar: '+e.message,'danger')}catch{}
+    return false;
+  }
+}
+function storageUsage(){
+  try{
+    const s=localStorage.getItem('gf_v2')||'';
+    return {bytes:new Blob([s]).size, items:(JSON.parse(s||'{}').months?Object.keys(JSON.parse(s).months).length:0)};
+  }catch{return{bytes:0,items:0}}
+}
+function loadConfig(){
+  const s=load();
+  const raw=s.config||{};
+  const cfg=Object.assign({name:'',weeklyBudget:100000,
+    defaultGroupA:[{name:'Claude Pro',amount:20000},{name:'Teléfono mamá',amount:20000},{name:'Seguro',amount:20000},{name:'BJJ',amount:35000},{name:'Gym',amount:75000}],
+    defaultGroupB:[{name:'CAE',amount:89610},{name:'Movistar',amount:56645}]
+  },raw);
+  // Migrate old hasFeria/feriaName/feriaAmount → periodicExpenses array
+  if(!cfg.periodicExpenses){
+    cfg.periodicExpenses=cfg.hasFeria!==false&&cfg.feriaAmount?
+      [{id:'feria',name:cfg.feriaName||'Feria',amount:cfg.feriaAmount||30000}]:[];
+  }
+  return cfg;
+}
+function saveConfig(cfg){const s=load();s.config=cfg;save(s)}
+function loadCuotas(){const s=load();return s.cuotas||[]}
+function saveCuotas(cs){const s=load();s.cuotas=cs;save(s)}
+function activeMonth(){const s=load();return s.active?s.months?.[s.active]:null}
+function saveMonth(md){
+  const s=load();s.months=s.months||{};
+  const key=`${md.year}-${String(md.month).padStart(2,'0')}`;
+  s.months[key]=md;s.active=key;save(s);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function today(){return new Date().toISOString().split('T')[0]}
+function fmt(n){const abs=Math.abs(Math.round(n));return(n<0?'-$':'$')+abs.toLocaleString('es-CL')}
+function fmtDate(s){
+  if(!s)return'';
+  const [y,m,d]=s.split('-').map(Number);
+  return `${d} ${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][m-1]}`;
+}
+function fmtDateLong(s){
+  const dt=new Date(s+'T12:00:00');
+  const days=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const mons=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${days[dt.getDay()]} ${dt.getDate()} de ${mons[dt.getMonth()]}`;
+}
+function inferCat(desc){
+  const low=desc.toLowerCase();
+  for(const c of CATS)if(c.k.some(k=>low.includes(k)))return c;
+  return CATS[CATS.length-1];
+}
+function nextCode(md){
+  const exps=md.expenses||[];
+  const max=exps.reduce((m,e)=>{const n=parseInt((e.code||'').split('-')[1]||0);return n>m?n:m},0);
+  return`${CODES[md.month]}-${String(max+1).padStart(3,'0')}`;
+}
+function getWeeks(m,year){
+  const cal=buildCal(year)[m],[y,mo,d]=cal.fm.split('-').map(Number);
+  return Array.from({length:cal.w},(_,i)=>{
+    const s=new Date(y,mo-1,d+i*7),e=new Date(y,mo-1,d+i*7+6);
+    return{num:i+1,start:s.toISOString().split('T')[0],end:e.toISOString().split('T')[0]};
+  });
+}
+function uid(){return Math.random().toString(36).slice(2,10)}
+
+// ── UI FEEDBACK ───────────────────────────────────────────────────────────────
+function toast(msg,type='ok'){
+  const el=document.createElement('div');
+  el.className=`toast toast-${type}`;el.textContent=msg;
+  document.body.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+  setTimeout(()=>el.classList.remove('show'),2200);
+  setTimeout(()=>el.remove(),2500);
+}
+function showConfirm(title,body,onOk,btnLabel='Confirmar',btnCls='btn-danger'){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-body').innerHTML=body;
+  const btn=document.getElementById('confirm-ok');
+  btn.textContent=btnLabel;btn.className='btn '+btnCls;
+  btn.onclick=()=>{hideConfirm();onOk()};
+  document.getElementById('overlay-confirm').classList.add('open');
+}
+const _CONFIRM_FOOTER_HTML=`<button class="btn btn-ghost" onclick="hideConfirm()">Cancelar</button><button class="btn" id="confirm-ok">Confirmar</button>`;
+function hideConfirm(){
+  document.getElementById('overlay-confirm').classList.remove('open');
+  const f=document.querySelector('#overlay-confirm .mfooter');
+  if(f){f.style.display='';f.innerHTML=_CONFIRM_FOOTER_HTML}
+}
+
+// Active cuotas for a given year/month
+function getActiveCuotas(year,month){
+  return loadCuotas().filter(c=>{
+    const start=c.startYear*12+c.startMonth;
+    const end=start+c.totalCuotas-1;
+    const cur=year*12+month;
+    return cur>=start&&cur<=end;
+  }).map(c=>{
+    const cuotaNum=year*12+month-(c.startYear*12+c.startMonth)+1;
+    return{...c,cuotaNum};
+  });
+}
+
+// ── CALCULATIONS ──────────────────────────────────────────────────────────────
+function calc(md){
+  const cfg=loadConfig();
+  const periodicExpenses=cfg.periodicExpenses||[];
+  const hasPeriodic=periodicExpenses.length>0;
+  const totalPerSun=periodicExpenses.reduce((s,p)=>s+p.amount,0);
+  const SEMANAL=cfg.weeklyBudget;
+  const cal=buildCal(md.year)[md.month];
+  const ws=getWeeks(md.month,md.year);
+  const now=today();
+  const exps=md.expenses||[];
+
+  const tA=(md.groupA||[]).reduce((s,x)=>s+x.amount,0);
+  const tB=(md.groupB||[]).reduce((s,x)=>s+x.amount,0);
+  const tC=(md.groupC||[]).reduce((s,x)=>s+x.amount,0);
+  const tFixed=tA+tB+tC;
+  const tFeria=cal.sun.length*totalPerSun;
+  const tSem=cal.w*SEMANAL;
+  const initLibre=md.income-tFixed-tFeria-tSem;
+
+  const wcs=ws.map(w=>{
+    const spent=exps.filter(e=>e.b==='semanal'&&e.date>=w.start&&e.date<=w.end).reduce((s,e)=>s+e.amount,0);
+    const rem=SEMANAL-spent;
+    const past=w.end<now,cur=w.start<=now&&now<=w.end;
+    return{...w,spent,rem,past,cur,
+      surplus:past?Math.max(0,rem):0,
+      overage:past?Math.max(0,-rem):0};
+  });
+
+  const curWeek=wcs.find(w=>w.cur)||wcs[0];
+  const semRem=Math.max(0,curWeek.rem);
+  const surpluses=wcs.reduce((s,w)=>s+w.surplus,0);
+  const overages=wcs.reduce((s,w)=>s+w.overage,0);
+  const libreExp=exps.filter(e=>e.b==='libre').reduce((s,e)=>s+e.amount,0);
+  const libreRem=initLibre+surpluses-overages-libreExp;
+  const puedes=semRem+libreRem;
+
+  // Paid periodic: sum across all periodic expense types
+  const paidFeria=periodicExpenses.reduce((tot,p)=>
+    tot+exps.filter(e=>e.b===p.id).reduce((s,e)=>s+e.amount,0),0);
+  const feriaRem=tFeria-paidFeria;
+  const allFixed=[...(md.groupA||[]),...(md.groupB||[]),...(md.groupC||[])];
+  const paidFixed=allFixed.filter(x=>x.paid).reduce((s,x)=>s+x.amount,0);
+  const fixedRem=tFixed-paidFixed;
+  const futureWks=wcs.filter(w=>!w.past&&!w.cur).length;
+  const comp=fixedRem+feriaRem+futureWks*SEMANAL;
+  const totalSpent=exps.reduce((s,e)=>s+e.amount,0);
+  // En cuenta: saldo previo + ingreso − gastos registrados − fijos marcados con checkbox
+  const enCuenta=md.initialBalance+md.income-totalSpent-paidFixed;
+
+  const catTotals={};
+  for(const e of exps){const k=e.cat?.n&&e.cat.n!=='Otros'?e.cat.n:'Sin categoría';catTotals[k]=(catTotals[k]||0)+e.amount}
+
+  return{tA,tB,tC,tFixed,tFeria,tSem,initLibre,surpluses,overages,wcs,curWeek,semRem,libreRem,
+    puedes,comp,enCuenta,feriaRem,fixedRem,futureWks,totalSpent,paidFeria,paidFixed,
+    catTotals,FERIA:totalPerSun,SEMANAL,hasFeria:hasPeriodic,hasPeriodic,periodicExpenses};
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+let activeBreakdown=null;
+
+function render(){
+  const md=activeMonth();
+  const cfg=loadConfig();
+  const firstName=(cfg.name||'').trim().split(/\s+/)[0];
+  document.getElementById('hdr-greeting').textContent=firstName?`Hola, ${firstName} 👋`:'Wizard';
+  document.getElementById('no-month').classList.toggle('hidden',!!md);
+  document.getElementById('main').classList.toggle('hidden',!md);
+  if(!md){document.getElementById('hdr-month').textContent='';return}
+
+  const cal=buildCal(md.year)[md.month];
+  document.getElementById('hdr-month').textContent=`${cal.name} ${md.year}`;
+  const cs=calc(md);
+
+  document.getElementById('kn-semana').textContent=fmt(cs.semRem);
+  const semHint=document.getElementById('kn-semana-hint');
+  if(semHint)semHint.textContent=`Sem ${cs.curWeek.num} · lun–dom`;
+  document.getElementById('kn-libre').textContent=fmt(cs.libreRem);
+  document.getElementById('kn-libre-card').className='kn '+(cs.libreRem<0?'kn-crimson':'kn-w2');
+  document.getElementById('kn-comp').textContent=fmt(cs.comp);
+  document.getElementById('kn-cuenta').textContent=fmt(cs.enCuenta);
+
+  const w=cs.curWeek;
+  const pct=Math.min(100,Math.round(w.spent/cs.SEMANAL*100));
+  document.getElementById('wbar-label').textContent=`Semana ${w.num} (${fmtDate(w.start)} – ${fmtDate(w.end)})`;
+  document.getElementById('wbar-rem').textContent=fmt(Math.max(0,w.rem));
+  document.getElementById('wbar-spent').textContent=`Gastado: ${fmt(w.spent)}`;
+  document.getElementById('wbar-budget').textContent=fmt(cs.SEMANAL);
+  const fill=document.getElementById('wbar-fill');
+  fill.style.width=pct+'%';
+  fill.className='wbar-fill '+(pct>=90?'fill-danger':pct>=75?'fill-warn':'fill-ok');
+
+  // Dynamic budget type select (periodic expenses)
+  const budgetSel=document.getElementById('f-budget');
+  const curBudgetVal=budgetSel.value;
+  const peOpts=cs.periodicExpenses.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  budgetSel.innerHTML=`<option value="semanal">Semanal</option><option value="libre">Dinero libre</option>${peOpts}<option value="fijo">Gasto fijo</option>`;
+  if([...budgetSel.options].some(o=>o.value===curBudgetVal))budgetSel.value=curBudgetVal;
+
+  // Dynamic Feria tab visibility
+  const feriaTabBtn=document.getElementById('tab-btn-feria');
+  if(feriaTabBtn){
+    feriaTabBtn.style.display=cs.hasPeriodic?'':'none';
+    const lbl=feriaTabBtn.querySelector('.bnav-label');
+    if(lbl)lbl.textContent=cs.periodicExpenses.length===1?cs.periodicExpenses[0].name:'Domingos';
+  }
+  // If feria tab is active but no periodic expenses, switch to gastos
+  const at0=document.querySelector('.bnav-item.active')?.dataset.tab||'gastos';
+  if(at0==='feria'&&!cs.hasPeriodic){switchTab('gastos',document.querySelector('.bnav-item[data-tab="gastos"]'));}
+
+  renderAlerts(md,cs);
+  if(activeBreakdown)renderBreakdown(activeBreakdown,md,cs);
+  const at=document.querySelector('.bnav-item.active')?.dataset.tab||'gastos';
+  renderTab(at,md,cs);
+  const fd=document.getElementById('f-date');
+  if(!fd.value)fd.value=today();
+}
+
+function renderAlerts(md,cs){
+  const el=document.getElementById('alerts');
+  const msgs=[];
+  const pct=cs.curWeek.spent/cs.SEMANAL;
+  if(pct>=.9)msgs.push({t:'danger',m:`🔴 Presupuesto semanal al ${Math.round(pct*100)}% — quedan ${fmt(Math.max(0,cs.curWeek.rem))}`});
+  else if(pct>=.75)msgs.push({t:'warn',m:`🟠 Presupuesto semanal al ${Math.round(pct*100)}%`});
+  else if(pct>=.5)msgs.push({t:'info',m:`🟡 Presupuesto semanal al ${Math.round(pct*100)}%`});
+  const now=today();
+  cs.periodicExpenses.forEach(p=>{
+    const paid=(md.expenses||[]).filter(e=>e.b===p.id).map(e=>e.date);
+    const up=buildCal(md.year)[md.month].sun.filter(s=>s<=now&&!paid.includes(s));
+    if(up.length)msgs.push({t:'warn',m:`📅 ${p.name}: ${up.length} domingo(s) sin confirmar pago`});
+  });
+  el.innerHTML=msgs.map(a=>`<div class="alert alert-${a.t}">${a.m}</div>`).join('');
+}
+
+function toggleBreakdown(type){
+  const panel=document.getElementById('breakdown-panel');
+  if(activeBreakdown===type){activeBreakdown=null;panel.classList.remove('open');return}
+  activeBreakdown=type;
+  panel.classList.add('open');
+  const md=activeMonth();if(!md)return;
+  renderBreakdown(type,md,calc(md));
+}
+
+function renderBreakdown(type,md,cs){
+  const panel=document.getElementById('breakdown-panel');
+  let rows=[];
+  if(type==='semana'){
+    const w=cs.curWeek;
+    rows=[
+      {l:`Semana ${w.num} — ${fmtDate(w.start)} al ${fmtDate(w.end)}`,v:''},
+      {l:'Presupuesto semanal',v:fmt(cs.SEMANAL)},
+      {l:'Gastado esta semana',v:`−${fmt(w.spent)}`},
+      {l:'Disponible esta semana',v:fmt(cs.semRem),total:true},
+    ];
+    // Add a note below the table
+    panel.innerHTML=rows.map(r=>`
+      <div class="breakdown-row${r.total?' total':''}">
+        <span class="breakdown-label" style="${r.total?';color:var(--text);font-weight:700':''}">${r.l}</span>
+        <span class="breakdown-val">${r.v}</span>
+      </div>`).join('')+
+      `<p style="font-size:.74rem;color:var(--muted);margin-top:10px;line-height:1.5">Es lo que te queda del presupuesto semanal (lunes a domingo). Cuando termina la semana, el sobrante pasa automáticamente a Dinero libre.</p>`;
+    return;
+  } else if(type==='libre'){
+    const w=cs.curWeek;
+    rows=[
+      {l:'Dinero libre inicial del mes',v:fmt(cs.initLibre)},
+      {l:'Sobrantes de semanas pasadas',v:`+${fmt(cs.surpluses)}`},
+      {l:'Excesos descontados',v:`−${fmt(cs.overages)}`},
+      {l:'Gastado como "libre"',v:`−${fmt((md.expenses||[]).filter(e=>e.b==='libre').reduce((s,e)=>s+e.amount,0))}`},
+      {l:'Dinero libre disponible',v:fmt(cs.libreRem),total:true},
+    ];
+    panel.innerHTML=rows.map(r=>`
+      <div class="breakdown-row${r.total?' total':''}">
+        <span class="breakdown-label" style="${r.total?';color:var(--text);font-weight:700':''}">${r.l}</span>
+        <span class="breakdown-val ${cs.libreRem<0&&r.total?'text-red':''}">${r.v}</span>
+      </div>`).join('')+
+      `<p style="font-size:.74rem;color:var(--muted);margin-top:10px;line-height:1.5">💚 <strong>¡Este dinero es tuyo!</strong> Es lo que sobra después de reservar todo lo comprometido. Puedes invertirlo, ahorrarlo, comprarte algo, salir a comer — lo que quieras. Sin culpa y sin afectar tu presupuesto semanal.</p>`;
+    return;
+  } else if(type==='comp'){
+    const peDom=cs.periodicExpenses.length===1?cs.periodicExpenses[0].name:'Dominicales';
+    rows=[
+      {l:'📋 Gastos fijos pendientes',v:fmt(cs.fixedRem)},
+      ...(cs.hasPeriodic&&cs.FERIA>0?[{l:`📅 ${peDom} pendiente (${Math.round(cs.feriaRem/cs.FERIA)} dom.)`,v:fmt(cs.feriaRem)}]:[]),
+      {l:`📆 Semanas futuras (${cs.futureWks}×${fmt(cs.SEMANAL)})`,v:fmt(cs.futureWks*cs.SEMANAL)},
+      {l:'Total comprometido',v:fmt(cs.comp),total:true},
+    ];
+  } else if(type==='cuenta'){
+    const byB={semanal:0,libre:0,fijo:0};
+    cs.periodicExpenses.forEach(p=>{byB[p.id]=0});
+    (md.expenses||[]).forEach(e=>{byB[e.b]=(byB[e.b]||0)+e.amount});
+    const paidPE=cs.periodicExpenses.reduce((s,p)=>s+(byB[p.id]||0),0);
+    rows=[
+      {l:'💼 Saldo antes del sueldo',v:fmt(md.initialBalance)},
+      {l:'💵 Ingreso del mes',v:`+${fmt(md.income)}`},
+      {l:'  Gastos semanales registrados',v:`−${fmt(byB.semanal)}`,sub:true},
+      {l:'  Dinero libre gastado',v:`−${fmt(byB.libre)}`,sub:true},
+      ...(cs.hasPeriodic&&paidPE>0?[{l:`  Gastos dominicales`,v:`−${fmt(paidPE)}`,sub:true}]:[]),
+      {l:'  Gastos fijos registrados',v:`−${fmt(byB.fijo)}`,sub:true},
+      {l:'  Gastos fijos marcados ✓',v:`−${fmt(cs.paidFixed)}`,sub:true},
+      {l:'Total en tu cuenta',v:fmt(cs.enCuenta),total:true},
+    ];
+  }
+  panel.innerHTML=rows.map(r=>`
+    <div class="breakdown-row${r.total?' total':''}">
+      <span class="breakdown-label" style="${r.sub?'padding-left:12px;font-size:.78rem':''}${r.total?';color:var(--text);font-weight:700':''}">${r.l}</span>
+      <span class="breakdown-val ${r.cls||''}">${r.v}</span>
+    </div>`).join('');
+}
+
+function renderTab(tab,md,cs){
+  if(tab==='gastos')renderGastos(md);
+  else if(tab==='semanas')renderSemanas(md,cs);
+  else if(tab==='fijos')renderFijos(md);
+  else if(tab==='feria')renderFeria(md,cs);
+  else if(tab==='stats')renderStats(md,cs);
+}
+
+function renderGastos(md){
+  const el=document.getElementById('list-gastos');
+  const cfg=loadConfig();
+  const peMap=Object.fromEntries((cfg.periodicExpenses||[]).map(p=>[p.id,p.name]));
+  const bLabel={semanal:'semanal',libre:'libre',fijo:'fijo',...peMap};
+  const exps=[...(md.expenses||[])].reverse();
+  if(!exps.length){el.innerHTML='<div class="empty">Aún no hay gastos registrados.</div>';return}
+  el.innerHTML=exps.map(e=>`
+    <div class="exp-item">
+      <div style="width:36px;height:36px;background:var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${e.cat?.e||'📦'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="exp-code">${e.code} · ${fmtDate(e.date)}</div>
+        <div class="exp-desc">${e.desc}<span class="badge b-${e.b}">${bLabel[e.b]||e.b}</span></div>
+        <div class="exp-meta">${e.cat?.n&&e.cat.n!=='Otros'?e.cat.n:'Sin categoría'}</div>
+      </div>
+      <div class="exp-right">
+        <div class="exp-amount">${fmt(e.amount)}</div>
+        <div style="display:flex;gap:4px;margin-top:4px">
+          <button class="btn btn-ghost btn-sm" onclick="editExpense('${e.code}')" title="Editar">✎</button>
+          <button class="btn btn-ghost btn-sm" onclick="delExpense('${e.code}')" title="Eliminar">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function renderSemanas(md,cs){
+  const el=document.getElementById('list-semanas');
+  const cal=buildCal(md.year)[md.month];
+  const colgadaInfo=cal.col?`<div class="alert alert-info" style="margin-bottom:12px;font-size:.80rem">
+    📌 <strong>¿Qué es la semana colgada?</strong><br>
+    Las semanas van siempre de <strong>lunes a domingo</strong>. Cuando el primer lunes del mes cae en el mes anterior, esa semana le "pertenece" a ese mes — aunque incluya días de este mes.<br>
+    <span style="color:var(--muted)">La semana del ${fmtDate(cal.col.s)} al ${fmtDate(cal.col.e)} pertenece a <strong>${cal.col.p}</strong>. Este mes empieza el <strong>lunes ${fmtDate(cal.fm)}</strong>.</span>
+  </div>`:'';
+  el.innerHTML=colgadaInfo+cs.wcs.map(w=>{
+    const pct=Math.min(100,Math.round(w.spent/cs.SEMANAL*100));
+    const cls=pct>=90?'fill-danger':pct>=75?'fill-warn':'fill-ok';
+    const badge=w.cur?'<span class="chip chip-current">actual</span>':'';
+    let extra='';
+    if(w.past&&w.surplus>0)extra=`<span class="chip-surplus">+${fmt(w.surplus)} → libre</span>`;
+    if(w.past&&w.overage>0)extra=`<span class="chip-overage">-${fmt(w.overage)} de libre</span>`;
+    return`<div class="wrow">
+      <div class="wrow-head"><span style="font-weight:700">Semana ${w.num} ${badge}</span>${extra}</div>
+      <div class="wrow-dates">${fmtDate(w.start)} – ${fmtDate(w.end)}</div>
+      <div class="wbar-track"><div class="wbar-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="wrow-foot"><span>${fmt(w.spent)} gastado</span><span>${w.past?'cerrada':fmt(Math.max(0,w.rem))+' restante'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderFijos(md){
+  const el=document.getElementById('list-fijos');
+  function group(title,desc,items,key){
+    if(!items||!items.length)return'';
+    const t=items.reduce((s,x)=>s+x.amount,0);
+    const p=items.filter(x=>x.paid).reduce((s,x)=>s+x.amount,0);
+    return`<div class="divider">
+      <div class="group-header">
+        <div><span class="group-title">${title}</span>
+        <div style="font-size:.72rem;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:2px">${desc}</div></div>
+        <span class="group-total">${fmt(p)} / ${fmt(t)}</span>
+      </div>
+      ${items.map((it,i)=>`<div class="fijo-item ${it.paid?'paid':''}">
+        <input type="checkbox" ${it.paid?'checked':''} onchange="toggleFijo('${key}',${i},this.checked)">
+        <span class="fijo-name">${it.name}${it.cuotaNum?` <span style="font-size:.72rem;color:var(--muted)">(${it.cuotaNum}/${it.totalCuotas})</span>`:''}</span>
+        <span class="fijo-amount">${fmt(it.amount)}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+  el.innerHTML='<div class="sec-title">Gastos fijos</div>'+
+    group('Gastos Fijos — Grupo A: Exactos','Montos que no cambian mes a mes (suscripciones, seguros, mensualidades exactas). Márcalos cuando los pagas.',md.groupA,'groupA')+
+    group('Gastos Fijos — Grupo B: Variables','Cuentas que siempre pagas pero el monto puede variar un poco (teléfono, internet, servicios). Ajusta si cambió.',md.groupB,'groupB')+
+    group('Grupo C — Cuotas','Compras a plazo activas este mes. Se cargan automáticamente al crear el mes.',md.groupC,'groupC')+
+    `<div class="mt-2"><button class="btn btn-ghost btn-sm" onclick="openSettings('cuotas')">+ Gestionar cuotas</button></div>`;
+}
+
+function renderFeria(md,cs){
+  const el=document.getElementById('list-feria');
+  const cal=buildCal(md.year)[md.month];
+  const now=today();
+  const pes=cs.periodicExpenses;
+  if(!pes.length){el.innerHTML='<div class="empty">No hay gastos dominicales configurados.<br><small>Agrégalos en ⚙️ Configuración.</small></div>';return}
+
+  const expl=`<div class="alert alert-info" style="margin-bottom:14px;font-size:.80rem">
+    ℹ️ <strong>Gastos dominicales</strong> — Son pagos que haces <strong>cada semana</strong>: recargar la BIP, echar bencina, ir al supermercado o la feria del barrio. Se registran el domingo de cada semana para llevar el control. Wizard los reserva por anticipado y te avisa si hay semanas sin confirmar.
+  </div>`;
+
+  let body='';
+  pes.forEach(p=>{
+    const paid=(md.expenses||[]).filter(e=>e.b===p.id).map(e=>e.date);
+    const np=paid.length;
+    body+=`<div style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="group-title">${p.name} — ${fmt(p.amount)}/domingo</span>
+        <span style="font-size:.8rem;color:var(--muted)">${np}/${cal.sun.length} pagados · ${fmt(np*p.amount)} / ${fmt(cal.sun.length*p.amount)}</span>
+      </div>
+      ${cal.sun.map(sun=>{
+        const isPaid=paid.includes(sun),isPast=sun<=now;
+        const st=isPaid?`<span class="status-paid">✓ Pagado</span>`:isPast?`<span class="status-pend">⚠️ Pendiente</span>`:`<span class="status-next">Próximo</span>`;
+        return`<div class="feria-item">
+          <div style="${isPaid?'color:var(--muted);':''}font-size:.88rem;font-weight:500">${fmtDateLong(sun)}</div>${st}</div>`;
+      }).join('')}
+    </div>`;
+  });
+  el.innerHTML=expl+body;
+}
+
+function donutSVG(segments,size=108){
+  const cx=size/2,cy=size/2,r=36,sw=20;
+  const total=segments.reduce((s,seg)=>s+seg.amt,0);
+  if(!total)return'';
+  const circ=2*Math.PI*r;
+  let cum=0;
+  const arcs=segments.filter(seg=>seg.amt>0).map(seg=>{
+    const len=seg.amt/total*circ;
+    const arc=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(1)} ${(circ-len).toFixed(1)}" stroke-dashoffset="${(-cum).toFixed(1)}"/>`;
+    cum+=len;return arc;
+  });
+  const labelFmt=total>=1000000?`$${(total/1000000).toFixed(1)}M`:total>=1000?`$${Math.round(total/1000)}k`:`$${total}`;
+  return`<div style="display:flex;justify-content:center;margin:14px 0 4px">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <g transform="rotate(-90 ${cx} ${cy})">${arcs.join('')}</g>
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="700" fill="var(--text)">${labelFmt}</text>
+    </svg>
+  </div>`;
+}
+
+function renderStats(md,cs){
+  const el=document.getElementById('list-stats');
+  const exps=md.expenses||[];
+
+  // Paid fixed items (checkboxes)
+  const paidFixedItems=[...(md.groupA||[]),...(md.groupB||[]),...(md.groupC||[])].filter(x=>x.paid);
+  const paidFixedTotal=paidFixedItems.reduce((s,x)=>s+x.amount,0);
+  const expTotal=exps.reduce((s,e)=>s+e.amount,0);
+  const grandTotal=expTotal+paidFixedTotal;
+
+  if(!grandTotal){el.innerHTML='<div class="empty">Registra gastos para ver estadísticas.</div>';return}
+
+  // By budget
+  const byB={semanal:0,libre:0,fijo:paidFixedTotal};
+  cs.periodicExpenses.forEach(p=>{byB[p.id]=0});
+  exps.forEach(e=>{byB[e.b]=(byB[e.b]||0)+e.amount});
+
+  // By category — expenses only (fixed items already appear in "Por presupuesto")
+  const byCat={};
+  exps.forEach(e=>{
+    const k=e.cat?.n&&e.cat.n!=='Otros'?e.cat.n:'Sin categoría';
+    const em=e.cat?.e||'📦';
+    byCat[k]=byCat[k]||{e:em,n:k,amt:0,items:[]};
+    byCat[k].amt+=e.amount;byCat[k].items.push(e);
+  });
+  const cats=Object.values(byCat).sort((a,b)=>b.amt-a.amt);
+  const catTotal=exps.reduce((s,e)=>s+e.amount,0);
+  const maxCat=cats[0]?.amt||1;
+
+  // Top 5 by amount
+  const top=[...exps].sort((a,b)=>b.amount-a.amount).slice(0,5);
+
+  // Budget rows — pastel palette
+  const peColors=['#f472b6','#fb923c','#22d3ee','#a3e635'];
+  const budgetRows=[
+    {lbl:'Semanal',key:'semanal',color:'#60a5fa'},
+    {lbl:'Dinero libre',key:'libre',color:'#4ade80'},
+    ...cs.periodicExpenses.map((p,i)=>({lbl:p.name,key:p.id,color:peColors[i]||'#f472b6'})),
+    {lbl:'Gastos fijos',key:'fijo',color:'#c084fc'},
+  ];
+
+  // Donut segments
+  const donutSegs=budgetRows.map(r=>({amt:byB[r.key]||0,color:r.color})).filter(s=>s.amt>0);
+
+  el.innerHTML=`
+  <div class="stat-block">
+    <div class="stat-block-title">Semanas</div>
+    ${cs.wcs.map(w=>{
+      const pct=Math.min(100,Math.round(w.spent/cs.SEMANAL*100));
+      const col=pct>=90?'var(--red)':pct>=75?'var(--yellow)':'var(--accent)';
+      return`<div class="stat-bar-row">
+        <span class="stat-name">Sem ${w.num} <span style="font-size:.72rem;color:var(--muted)">${fmtDate(w.start)}</span></span>
+        <div class="stat-track"><div class="stat-fill" style="width:${pct}%;background:${col}"></div></div>
+        <span class="stat-amount">${fmt(w.spent)}</span><span class="stat-pct">${pct}%</span></div>`;
+    }).join('')}
+  </div>
+
+  <div class="stat-block">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span class="stat-block-title" style="margin-bottom:0">Por presupuesto</span>
+      <span style="font-size:.82rem;font-weight:700">${fmt(grandTotal)} <span style="color:var(--muted);font-weight:400">(100%)</span></span>
+    </div>
+    ${budgetRows.map(({lbl,key,color})=>{
+      const amt=byB[key]||0;const pct=grandTotal?Math.round(amt/grandTotal*100):0;
+      return`<div class="stat-bar-row"><span class="stat-name">${lbl}</span>
+        <div class="stat-track"><div class="stat-fill" style="width:${pct}%;background:${color}"></div></div>
+        <span class="stat-amount">${fmt(amt)}</span><span class="stat-pct">${pct}%</span></div>`;
+    }).join('')}
+    ${donutSegs.length>1?donutSVG(donutSegs):''}
+  </div>
+
+  <div class="stat-block">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span class="stat-block-title" style="margin-bottom:0">Por categoría</span>
+      <span style="font-size:.82rem;font-weight:700">${fmt(catTotal)} <span style="color:var(--muted);font-weight:400">(gastos)</span></span>
+    </div>
+    <p style="font-size:.72rem;color:var(--muted);margin-bottom:10px">Solo gastos registrados — los fijos marcados ✓ aparecen en "Por presupuesto". Toca una categoría para ver el detalle.</p>
+    ${cats.map(c=>{
+      const pct=catTotal?Math.round(c.amt/catTotal*100):0;
+      const barPct=Math.round(c.amt/maxCat*100);
+      const isExp=_statCat===c.n;
+      return`<div onclick="toggleStatCat('${c.n.replace(/'/g,'\\\'')}')" style="cursor:pointer;padding:3px 0">
+        <div class="stat-bar-row" style="margin:0">
+          <span class="stat-emoji">${c.e}</span><span class="stat-name">${c.n}</span>
+          <div class="stat-track"><div class="stat-fill" style="width:${barPct}%"></div></div>
+          <span class="stat-amount">${fmt(c.amt)}</span><span class="stat-pct">${pct}%</span>
+        </div>
+        ${isExp?`<div style="padding:6px 4px 4px;border-top:1px solid var(--border);margin-top:4px">
+          ${c.items.map(e=>`<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:.78rem">
+            <span style="color:var(--muted)">${fmtDate(e.date)} · ${e.desc}</span>
+            <span style="font-weight:600">${fmt(e.amount)}</span>
+          </div>`).join('')}
+        </div>`:''}
+      </div>`;
+    }).join('')}
+  </div>
+
+  ${top.length?`<div class="stat-block">
+    <div class="stat-block-title">Top 5 gastos</div>
+    ${top.map((e,i)=>`<div class="stat-bar-row">
+      <span style="color:var(--muted);font-size:.8rem;min-width:18px">#${i+1}</span>
+      <span class="stat-name">${e.desc}</span>
+      <span style="font-size:.74rem;color:var(--muted)">${fmtDate(e.date)}</span>
+      <span class="stat-amount">${fmt(e.amount)}</span></div>`).join('')}
+  </div>`:''}`;
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.bnav-item').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  else document.querySelector(`.bnav-item[data-tab="${tab}"]`)?.classList.add('active');
+  const panel=document.getElementById('tab-'+tab);
+  ['gastos','semanas','fijos','feria','stats'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden',t!==tab));
+  const md=activeMonth();
+  if(md&&panel){
+    panel.style.opacity='0';
+    renderTab(tab,md,calc(md));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{panel.style.opacity=''}));
+  }
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function onBudgetChange(){
+  const b=document.getElementById('f-budget').value;
+  const am=document.getElementById('f-amount');
+  const cfg=loadConfig();
+  const pe=(cfg.periodicExpenses||[]).find(p=>p.id===b);
+  if(pe){am.value=pe.amount;am.readOnly=true}
+  else{am.readOnly=false}
+}
+
+function addExpense(){
+  const md=activeMonth();if(!md)return;
+  const date=document.getElementById('f-date').value;
+  const desc=document.getElementById('f-desc').value.trim();
+  const amtRaw=document.getElementById('f-amount').value;
+  const b=document.getElementById('f-budget').value;
+  if(!date||!desc||!amtRaw){toast('Completa todos los campos.','danger');return}
+  const amount=parseInt(String(amtRaw).replace(/\./g,''));
+  if(!amount||amount<=0){toast('Monto inválido.','danger');return}
+  const cal=buildCal(md.year)[md.month];
+  const cfg2=loadConfig();
+  const isPeriodic=(cfg2.periodicExpenses||[]).some(p=>p.id===b);
+  const expM=parseInt(date.split('-')[1]),expY=parseInt(date.split('-')[0]);
+  const needsDateWarn=expM!==md.month||expY!==md.year;
+  const needsColWarn=cal.col&&date>=cal.col.s&&date<=cal.col.e&&isPeriodic;
+
+  const doSave=()=>{
+    const cat=inferCat(desc);const code=nextCode(md);
+    md.expenses=[...(md.expenses||[]),{code,date,desc,amount,b,cat}];
+    saveMonth(md);
+    document.getElementById('f-desc').value='';
+    document.getElementById('f-amount').value='';
+    document.getElementById('f-amount').readOnly=false;
+    document.getElementById('f-budget').value='semanal';
+    document.getElementById('f-date').value=today();
+    document.getElementById('f-desc').focus();
+    render();
+    toast(`${desc} — ${fmt(amount)} registrado`,'ok');
+  };
+  const confirmCol=()=>showConfirm('Semana colgada',
+    `El ${fmtDate(date)} pertenece a la semana colgada de <strong>${cal.col.p}</strong>. Este domingo es técnicamente del mes anterior. ¿Registrarlo de todos modos?`,
+    doSave,'Registrar','btn-primary');
+  if(needsDateWarn){
+    showConfirm('Fecha fuera del mes',
+      `La fecha ${fmtDate(date)} no pertenece a <strong>${cal.name} ${md.year}</strong>. ¿Registrarlo de todos modos en este mes?`,
+      needsColWarn?confirmCol:doSave,'Registrar','btn-primary');
+  } else if(needsColWarn){
+    confirmCol();
+  } else {
+    doSave();
+  }
+}
+
+function delExpense(code){
+  showConfirm('Eliminar gasto',`¿Eliminar <strong>${code}</strong>? Esta acción no se puede deshacer.`,()=>{
+    const md=activeMonth();
+    md.expenses=(md.expenses||[]).filter(e=>e.code!==code);
+    saveMonth(md);render();
+  });
+}
+
+function editExpense(code){
+  const md=activeMonth();if(!md)return;
+  const e=(md.expenses||[]).find(x=>x.code===code);if(!e)return;
+  const cfg=loadConfig();
+  const pes=cfg.periodicExpenses||[];
+  document.getElementById('overlay-edit').classList.add('open');
+  document.getElementById('modal-edit').innerHTML=`
+    <h2>✏️ Editar gasto</h2>
+    <p class="sub">${e.code}</p>
+    <label class="label first">Fecha</label>
+    <input type="date" id="e-date" value="${e.date}">
+    <label class="label">Descripción</label>
+    <input type="text" id="e-desc" value="${e.desc}" autocomplete="off">
+    <label class="label">Monto</label>
+    <input type="number" id="e-amount" value="${e.amount}" inputmode="decimal">
+    <label class="label">Tipo de presupuesto</label>
+    <select id="e-budget">
+      <option value="semanal" ${e.b==='semanal'?'selected':''}>Semanal</option>
+      <option value="libre" ${e.b==='libre'?'selected':''}>Dinero libre</option>
+      ${pes.map(p=>`<option value="${p.id}" ${e.b===p.id?'selected':''}>${p.name}</option>`).join('')}
+      <option value="fijo" ${e.b==='fijo'?'selected':''}>Gasto fijo</option>
+    </select>
+    <div class="mfooter">
+      <button class="btn btn-ghost" onclick="document.getElementById('overlay-edit').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveExpenseEdit('${code}')">Guardar</button>
+    </div>`;
+}
+
+function saveExpenseEdit(code){
+  const md=activeMonth();if(!md)return;
+  const idx=(md.expenses||[]).findIndex(x=>x.code===code);if(idx<0)return;
+  const date=document.getElementById('e-date').value;
+  const desc=document.getElementById('e-desc').value.trim();
+  const amount=parseInt(document.getElementById('e-amount').value);
+  const b=document.getElementById('e-budget').value;
+  if(!date||!desc||!amount||amount<=0){toast('Completa todos los campos.','danger');return}
+  md.expenses[idx]={...md.expenses[idx],date,desc,amount,b,cat:inferCat(desc)};
+  saveMonth(md);
+  document.getElementById('overlay-edit').classList.remove('open');
+  render();
+}
+
+function toggleFijo(key,idx,checked){
+  const md=activeMonth();
+  md[key][idx].paid=checked;
+  saveMonth(md);render();
+}
+
+// ── WIZARD ────────────────────────────────────────────────────────────────────
+let wz={step:0,data:{}};
+
+function openWizard(){
+  wz={step:0,data:{}};
+  document.getElementById('overlay-wizard').classList.add('open');
+  renderWizard();
+}
+function closeWizard(){document.getElementById('overlay-wizard').classList.remove('open')}
+
+function advanceFromWelcome(){
+  syncWizardPE();
+  const sem=parseInt(document.getElementById('w-sem').value);
+  if(!sem||sem<=0){toast('Presupuesto semanal inválido','danger');return}
+  // Build periodicExpenses array with stable ids
+  const pes=(wz.data.periodicExpenses||[])
+    .filter(p=>p.name&&p.amount>0)
+    .map((p,i)=>({id:i===0?'feria':`feria${i+1}`,name:p.name,amount:p.amount}));
+  const cfg=loadConfig();
+  cfg.weeklyBudget=sem;
+  cfg.periodicExpenses=pes;
+  saveConfig(cfg);
+  const mv=document.getElementById('w-month-sel').value.split('-');
+  wz.data.year=parseInt(mv[0]);
+  wz.data.month=parseInt(mv[1]);
+  wz.step=1;renderWizard();
+}
+
+function syncWizardItems(group){
+  if(group==='A'&&wz.step===3){
+    wz.data.groupA=wz.data.groupA.map((it,i)=>({...it,
+      name:document.getElementById(`ga-n-${i}`)?.value.trim()||it.name,
+      amount:parseInt(document.getElementById(`ga-a-${i}`)?.value)||it.amount}));
+  } else if(group==='B'&&wz.step===4){
+    wz.data.groupB=wz.data.groupB.map((it,i)=>({...it,
+      name:document.getElementById(`gb-n-${i}`)?.value.trim()||it.name,
+      amount:parseInt(document.getElementById(`gb-a-${i}`)?.value)||it.amount}));
+  }
+}
+function addWizardItem(group){
+  syncWizardItems(group);
+  if(group==='A')wz.data.groupA.push({name:'',amount:0,paid:false});
+  else wz.data.groupB.push({name:'',amount:0,paid:false});
+  renderWizard();
+  // Focus last name input
+  setTimeout(()=>{
+    const inputs=document.querySelectorAll(group==='A'?'[id^=ga-n-]':'[id^=gb-n-]');
+    if(inputs.length)inputs[inputs.length-1].focus();
+  },50);
+}
+function removeWizardItem(group,idx){
+  syncWizardItems(group);
+  if(group==='A')wz.data.groupA.splice(idx,1);
+  else wz.data.groupB.splice(idx,1);
+  renderWizard();
+}
+function syncWizardPE(){
+  if(!wz.data.periodicExpenses)return;
+  wz.data.periodicExpenses=wz.data.periodicExpenses.map((p,i)=>({
+    ...p,
+    name:(document.getElementById(`wpe-n-${i}`)?.value.trim()||p.name),
+    amount:parseInt(document.getElementById(`wpe-a-${i}`)?.value)||p.amount
+  }));
+}
+function addWizardPE(){
+  syncWizardPE();
+  if(!wz.data.periodicExpenses)wz.data.periodicExpenses=[];
+  wz.data.periodicExpenses.push({name:'',amount:0});
+  renderWizard();
+  setTimeout(()=>{
+    const ins=document.querySelectorAll('[id^=wpe-n-]');
+    if(ins.length)ins[ins.length-1].focus();
+  },50);
+}
+function removeWizardPE(idx){
+  syncWizardPE();
+  wz.data.periodicExpenses.splice(idx,1);
+  renderWizard();
+}
+
+function renderWizard(){
+  const now=today();
+  const todayM=parseInt(now.split('-')[1]),todayY=parseInt(now.split('-')[0]);
+  const m=wz.data.month||todayM,y=wz.data.year||todayY;
+  const calYear=buildCal(y);const cal=calYear[m];const cfg=loadConfig();const s=load();
+  const prev=s.months?.[m>1?`${y}-${String(m-1).padStart(2,'0')}`:`${y-1}-12`];
+  const activeCuotas=getActiveCuotas(y,m);
+
+  // Build month options (all months for this year)
+  const monthOpts=Object.entries(calYear).map(([k,v])=>
+    `<option value="${y}-${String(k).padStart(2,'0')}" ${parseInt(k)===m&&y===todayY?'selected':''}>${v.name} ${y}</option>`
+  ).join('');
+
+  const steps=[
+    // 0 — elegir mes + presupuesto base
+    ()=>{
+      const col=cal.col?`<div class="alert alert-warn" style="margin-top:12px">
+        ⚠️ <strong>${cal.name} tiene semana colgada</strong><br>
+        <span style="font-size:.8rem">Las semanas van de <strong>lunes a domingo</strong>. La semana del ${fmtDate(cal.col.s)} al ${fmtDate(cal.col.e)} tiene su lunes en <strong>${cal.col.p}</strong>, así que le "pertenece" a ese mes. Este mes (${cal.name}) empieza el <strong>${fmtDate(cal.fm)}</strong>.</span>
+      </div>`:'';
+      const wzPes=wz.data.periodicExpenses||cfg.periodicExpenses||[];
+      wz.data.periodicExpenses=wzPes;
+      const peRows=wzPes.map((p,i)=>`
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <input id="wpe-n-${i}" value="${p.name}" placeholder="Ej: BIP" style="flex:1;font-size:.84rem;padding:7px 9px">
+          <input type="number" id="wpe-a-${i}" value="${p.amount||''}" placeholder="Monto" inputmode="decimal" style="width:100px;font-size:.84rem;padding:7px 9px">
+          <button class="btn btn-ghost btn-sm" style="padding:6px 9px;flex-shrink:0" onclick="removeWizardPE(${i})">✕</button>
+        </div>`).join('');
+      document.getElementById('modal-wizard').innerHTML=`
+        <h2>📅 Nuevo mes</h2>
+        <p class="sub">Elige el mes y confirma tu presupuesto base.</p>
+        <label class="label first">Mes a configurar</label>
+        <select id="w-month-sel" onchange="(function(){const mv=document.getElementById('w-month-sel').value.split('-');wz.data.year=parseInt(mv[0]);wz.data.month=parseInt(mv[1]);renderWizard()})()">
+          ${monthOpts}
+        </select>
+        ${col}
+        <label class="label" style="margin-top:14px">Presupuesto semanal (lun–dom)</label>
+        <input type="number" id="w-sem" value="${cfg.weeklyBudget}" placeholder="100000" inputmode="decimal">
+        <p style="font-size:.72rem;color:var(--muted);margin-top:4px">${cal.w} semanas · ${cal.sun.length} domingos</p>
+        <div style="margin-top:14px;padding:12px;background:var(--bg);border-radius:8px">
+          <div style="font-size:.88rem;font-weight:600;margin-bottom:4px">🔄 Gastos dominicales</div>
+          <p style="font-size:.74rem;color:var(--muted);margin-bottom:10px">Pagos que haces todas las semanas: recargar BIP, echar bencina, ir al supermercado o la feria. Agrega uno o más si aplica.</p>
+          <div id="w-pe-list">${peRows||'<div style="font-size:.82rem;color:var(--muted);padding:4px 0">Sin gastos dominicales configurados.</div>'}</div>
+          <button class="btn btn-ghost btn-sm mt-1" onclick="addWizardPE()">+ Agregar gasto semanal</button>
+        </div>
+        <div class="mfooter"><button class="btn btn-ghost" onclick="closeWizard()">Cancelar</button>
+        <button class="btn btn-primary" onclick="advanceFromWelcome()">Siguiente →</button></div>`;
+    },
+    // 1 — saldo ANTES del sueldo
+    ()=>{
+      const prevKey=m>1?`${y}-${String(m-1).padStart(2,'0')}`:`${y-1}-12`;
+      const st2=load();
+      const prevMd=st2.months?.[prevKey];
+      const hasPrevBalance=prevMd?.finalBalance!==undefined;
+      const suggestedBal=wz.data.initialBalance!==undefined?wz.data.initialBalance:(hasPrevBalance?prevMd.finalBalance:'');
+      const prevNote=hasPrevBalance?`<div class="alert alert-info" style="margin-bottom:12px;font-size:.78rem">📈 Cierre de <strong>${buildCal(prevMd.year)[prevMd.month]?.name||'mes anterior'} ${prevMd.year}</strong>: saldo final <strong>${fmt(prevMd.finalBalance)}</strong> — pre-cargado.</div>`:'';
+      document.getElementById('modal-wizard').innerHTML=`
+      <h2>🏦 Saldo antes del sueldo</h2>
+      <p class="sub">¿Cuánto tenías en tu banco <strong>antes</strong> de recibir tu sueldo de este mes? La app le sumará el ingreso para calcular tu balance real.</p>
+      ${prevNote}
+      <label class="label first">Saldo previo (antes del depósito)</label>
+      <input type="number" id="w-bal" placeholder="Ej: 50000" value="${suggestedBal}" inputmode="decimal">
+      <p style="font-size:.75rem;color:var(--muted);margin-top:8px">Si ya recibiste el sueldo y no sabes el saldo anterior, puedes poner 0.</p>
+      <div class="mfooter"><button class="btn btn-ghost" onclick="wz.step=0;renderWizard()">← Atrás</button>
+      <button class="btn btn-primary" onclick="
+        const v=parseInt(document.getElementById('w-bal').value)||0;
+        wz.data.initialBalance=v;wz.step=2;renderWizard()">Siguiente →</button></div>`;
+    },
+    // 2 — ingreso
+    ()=>{document.getElementById('modal-wizard').innerHTML=`
+      <h2>💵 Ingreso del mes</h2>
+      <p class="sub">¿Cuánto recibiste (o vas a recibir) este mes? El presupuesto se distribuye sobre este monto.</p>
+      <label class="label first">Ingreso mensual</label>
+      <input type="number" id="w-inc" placeholder="Ej: 1200000" value="${wz.data.income||''}" inputmode="decimal">
+      <div class="mfooter"><button class="btn btn-ghost" onclick="wz.step=1;renderWizard()">← Atrás</button>
+      <button class="btn btn-primary" onclick="
+        const v=parseInt(document.getElementById('w-inc').value);
+        if(!v||v<=0){toast('Monto inválido','danger');return}
+        wz.data.income=v;wz.step=3;renderWizard()">Siguiente →</button></div>`;
+    },
+    // 3 — grupo A (fijos exactos, con add/remove)
+    ()=>{
+      const items=wz.data.groupA||(prev?.groupA||cfg.defaultGroupA).map(x=>({...x,paid:false}));
+      wz.data.groupA=items;
+      const rows=items.map((it,i)=>`
+        <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+          <input id="ga-n-${i}" value="${it.name}" placeholder="Nombre del gasto" style="flex:1;font-size:.84rem;padding:7px 9px">
+          <input type="number" id="ga-a-${i}" value="${it.amount||''}" placeholder="Monto" inputmode="decimal" style="width:105px;font-size:.84rem;padding:7px 9px">
+          <button class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:6px 9px" onclick="removeWizardItem('A',${i})" title="Eliminar">✕</button>
+        </div>`).join('');
+      document.getElementById('modal-wizard').innerHTML=`
+        <h2>📋 Gastos fijos exactos</h2>
+        <p class="sub"><strong>Gastos Fijos — Grupo A: Exactos.</strong> Montos que no cambian mes a mes (suscripciones, seguros, gimnasio). Wizard los reserva en "Comprometido" desde el primer día.</p>
+        ${rows||'<div class="empty" style="padding:12px 0">Sin gastos fijos exactos.</div>'}
+        <button class="btn btn-ghost btn-sm mt-2" onclick="addWizardItem('A')">+ Agregar</button>
+        <div class="mfooter"><button class="btn btn-ghost" onclick="wz.step=2;renderWizard()">← Atrás</button>
+        <button class="btn btn-primary" onclick="collectGA()">Siguiente →</button></div>`;
+    },
+    // 4 — grupo B (variables conocidos, con add/remove)
+    ()=>{
+      const items=wz.data.groupB||(prev?.groupB||cfg.defaultGroupB).map(x=>({...x,paid:false}));
+      wz.data.groupB=items;
+      const rows=items.map((it,i)=>`
+        <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+          <input id="gb-n-${i}" value="${it.name}" placeholder="Nombre del gasto" style="flex:1;font-size:.84rem;padding:7px 9px">
+          <input type="number" id="gb-a-${i}" value="${it.amount||''}" placeholder="Monto" inputmode="decimal" style="width:105px;font-size:.84rem;padding:7px 9px">
+          <button class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:6px 9px" onclick="removeWizardItem('B',${i})" title="Eliminar">✕</button>
+        </div>`).join('');
+      document.getElementById('modal-wizard').innerHTML=`
+        <h2>📋 Gastos fijos variables</h2>
+        <p class="sub"><strong>Gastos Fijos — Grupo B: Variables.</strong> Pagos que siempre haces pero el monto puede cambiar un poco (internet, teléfono, servicios). Pon el monto típico y ajusta si cambió.</p>
+        ${rows||'<div class="empty" style="padding:12px 0">Sin gastos variables.</div>'}
+        <button class="btn btn-ghost btn-sm mt-2" onclick="addWizardItem('B')">+ Agregar</button>
+        <div class="mfooter"><button class="btn btn-ghost" onclick="wz.step=3;renderWizard()">← Atrás</button>
+        <button class="btn btn-primary" onclick="collectGB()">Siguiente →</button></div>`;
+    },
+    // 5 — cuotas
+    ()=>{
+      const groupC=activeCuotas.map(c=>({name:c.name,amount:c.monthlyAmount,paid:false,cuotaNum:c.cuotaNum,totalCuotas:c.totalCuotas,cuotaId:c.id}));
+      wz.data.groupC=groupC;
+      const body=groupC.length?groupC.map(c=>`
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem">
+          <span>${c.name} <span style="color:var(--muted);font-size:.75rem">(cuota ${c.cuotaNum}/${c.totalCuotas})</span></span>
+          <strong>${fmt(c.amount)}</strong>
+        </div>`).join(''):`<div class="empty" style="padding:16px">Sin cuotas activas. <button class="btn btn-ghost btn-sm" onclick="openSettings('cuotas')">Agregar cuota</button></div>`;
+      document.getElementById('modal-wizard').innerHTML=`
+        <h2>💳 Cuotas activas</h2><p class="sub">Se incluyen automáticamente como gasto fijo.</p>
+        ${body}
+        <div class="mfooter"><button class="btn btn-ghost" onclick="wz.step=4;renderWizard()">← Atrás</button>
+        <button class="btn btn-primary" onclick="wz.step=6;renderWizard()">Siguiente →</button></div>`;
+    },
+    // 6 — resumen
+    ()=>{
+      const pes=cfg.periodicExpenses||[];
+      const totalPerSun=pes.reduce((s,p)=>s+p.amount,0);
+      const tA=(wz.data.groupA||[]).reduce((s,x)=>s+x.amount,0);
+      const tB=(wz.data.groupB||[]).reduce((s,x)=>s+x.amount,0);
+      const tC=(wz.data.groupC||[]).reduce((s,x)=>s+x.amount,0);
+      const tF=cal.sun.length*totalPerSun;
+      const tS=cal.w*cfg.weeklyBudget;
+      const lib=wz.data.income-tA-tB-tC-tF-tS;
+      const enCuenta=wz.data.initialBalance+wz.data.income;
+      document.getElementById('modal-wizard').innerHTML=`
+        <h2>📊 Panorama de ${cal.name} ${y}</h2><p class="sub">Distribución del ingreso mensual.</p>
+        <table class="stbl">
+          <tr><td>Saldo previo + Ingreso</td><td>${fmt(wz.data.initialBalance)} + ${fmt(wz.data.income)}</td></tr>
+          <tr><td style="padding-left:12px;font-size:.82rem;color:var(--muted)">− Grupo A: Exactos</td><td style="color:var(--muted)">−${fmt(tA)}</td></tr>
+          <tr><td style="padding-left:12px;font-size:.82rem;color:var(--muted)">− Grupo B: Variables</td><td style="color:var(--muted)">−${fmt(tB)}</td></tr>
+          ${tC?`<tr><td style="padding-left:12px;font-size:.82rem;color:var(--muted)">− Cuotas</td><td style="color:var(--muted)">−${fmt(tC)}</td></tr>`:''}
+          ${pes.length&&tF>0?`<tr><td style="padding-left:12px;font-size:.82rem;color:var(--muted)">− Semanales (${cal.sun.length} sem.)</td><td style="color:var(--muted)">−${fmt(tF)}</td></tr>`:''}
+          <tr><td style="padding-left:12px;font-size:.82rem;color:var(--muted)">− Semanas (${cal.w}×${fmt(cfg.weeklyBudget)})</td><td style="color:var(--muted)">−${fmt(tS)}</td></tr>
+          <tr class="total"><td>Dinero libre</td><td style="color:${lib>=0?'var(--green)':'var(--red)'}">${fmt(lib)}</td></tr>
+        </table>
+        <div style="display:grid;gap:8px;margin-top:14px">
+          <div class="kn-summary kn-blue">
+            <span>📅 Esta semana (semana 1)</span><strong>${fmt(cfg.weeklyBudget)}</strong>
+          </div>
+          <div class="kn-summary kn-green">
+            <span>💚 Dinero libre</span><strong>${fmt(lib)}</strong>
+          </div>
+          <div class="kn-summary kn-purple">
+            <span>🏦 En tu cuenta al inicio</span><strong>${fmt(enCuenta)}</strong>
+          </div>
+        </div>
+        <p style="font-size:.74rem;color:var(--muted);margin-top:8px;line-height:1.5">"En tu cuenta" baja cada vez que registras un gasto. El presupuesto se distribuye sobre el ingreso (${fmt(wz.data.income)}).</p>
+        <div class="mfooter"><button class="btn btn-ghost" onclick="wz.step=5;renderWizard()">← Atrás</button>
+        <button class="btn btn-primary" onclick="finishWizard()">¡Listo! Empezar →</button></div>`;
+    },
+  ];
+  steps[wz.step]();
+}
+
+function collectGA(){
+  wz.data.groupA=(wz.data.groupA||[]).map((it,i)=>({...it,
+    name:document.getElementById(`ga-n-${i}`)?.value.trim()||it.name,
+    amount:parseInt(document.getElementById(`ga-a-${i}`)?.value)||0,paid:false
+  })).filter(it=>it.name&&it.amount>0);
+  wz.step=4;renderWizard();
+}
+function collectGB(){
+  wz.data.groupB=(wz.data.groupB||[]).map((it,i)=>({...it,
+    name:document.getElementById(`gb-n-${i}`)?.value.trim()||it.name,
+    amount:parseInt(document.getElementById(`gb-a-${i}`)?.value)||0,paid:false
+  })).filter(it=>it.name&&it.amount>0);
+  wz.step=5;renderWizard();
+}
+function finishWizard(){
+  const now=today();
+  const m=wz.data.month||parseInt(now.split('-')[1]);
+  const y=wz.data.year||parseInt(now.split('-')[0]);
+  saveMonth({month:m,year:y,income:wz.data.income,initialBalance:wz.data.initialBalance,
+    groupA:wz.data.groupA||[],groupB:wz.data.groupB||[],groupC:wz.data.groupC||[],expenses:[]});
+  closeWizard();render();
+}
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────────
+let settingsTab='perfil';
+
+function openSettings(tab='perfil'){
+  settingsTab=tab;
+  document.getElementById('overlay-settings').classList.add('open');
+  renderSettings();
+}
+function closeSettings(){
+  document.getElementById('overlay-settings').classList.remove('open');
+  render();
+  // If wizard was left open (user accessed settings from within wizard), re-render it
+  if(document.getElementById('overlay-wizard').classList.contains('open'))renderWizard();
+}
+
+function renderSettings(){
+  const cfg=loadConfig();
+  const cuotas=loadCuotas();
+  const el=document.getElementById('modal-settings');
+  const tabs=[['perfil','👤 Perfil'],['fijos','📋 Gastos fijos'],['cuotas','💳 Cuotas'],['historial','📅 Historial']];
+  el.innerHTML=`
+    <h2>⚙️ Configuración</h2>
+    <div class="stabs">
+      ${tabs.map(([t,l])=>`<button class="stab ${settingsTab===t?'active':''}" onclick="settingsTab='${t}';renderSettings()">${l}</button>`).join('')}
+    </div>
+    <div id="settings-body"></div>
+    <div class="mfooter"><button class="btn btn-ghost" onclick="closeSettings()">Cerrar</button></div>`;
+
+  const body=document.getElementById('settings-body');
+
+  if(settingsTab==='perfil'){
+    const pes=cfg.periodicExpenses||[];
+    const peRows=pes.map((p,i)=>`
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <input id="cpe-n-${i}" value="${p.name}" placeholder="Ej: BIP" style="flex:1">
+        <input type="number" id="cpe-a-${i}" value="${p.amount}" placeholder="Monto" inputmode="decimal" style="width:110px">
+        <button class="btn btn-danger btn-sm" onclick="delCfgPE(${i})">✕</button>
+      </div>`).join('');
+    body.innerHTML=`
+      <label class="label first">Tu nombre</label>
+      <input id="cfg-name" value="${cfg.name||''}" placeholder="Ej: Felipe">
+      <label class="label">Presupuesto semanal (lun–dom)</label>
+      <input id="cfg-semanal" type="number" value="${cfg.weeklyBudget}" inputmode="decimal">
+      <div style="margin-top:14px;padding:12px;background:var(--bg);border-radius:8px">
+        <div style="font-size:.88rem;font-weight:600;margin-bottom:4px">🔄 Gastos dominicales</div>
+        <p style="font-size:.74rem;color:var(--muted);margin-bottom:10px">Pagos que haces cada domingo (BIP, feria, mercado, etc.). Agrega uno o más.</p>
+        <div id="cpe-list">${peRows||'<div style="font-size:.82rem;color:var(--muted);padding:4px 0">Sin gastos dominicales.</div>'}</div>
+        <button class="btn btn-ghost btn-sm mt-1" onclick="addCfgPE()">+ Agregar</button>
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" onclick="savePerfil()">Guardar</button>
+      </div>`;
+  } else if(settingsTab==='fijos'){
+    const ga=cfg.defaultGroupA,gb=cfg.defaultGroupB;
+    body.innerHTML=`
+      <p class="text-muted" style="font-size:.82rem;margin-bottom:12px">Estos son los valores por defecto para nuevos meses. Editar aquí no cambia el mes actual.</p>
+      <div class="group-title" style="margin-bottom:8px">Gastos Fijos — Grupo A: Exactos</div>
+      <div id="ga-list">${ga.map((it,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px">
+        <input id="ga-n-${i}" value="${it.name}" style="flex:1">
+        <input id="ga-a-${i}" type="number" value="${it.amount}" inputmode="decimal" style="width:110px">
+        <button class="btn btn-danger btn-sm" onclick="delDefaultFixed('A',${i})">✕</button>
+      </div>`).join('')}</div>
+      <button class="btn btn-ghost btn-sm mt-1" onclick="addDefaultFixed('A')">+ Agregar</button>
+      <div class="group-title" style="margin-top:16px;margin-bottom:8px">Gastos Fijos — Grupo B: Variables</div>
+      <div id="gb-list">${gb.map((it,i)=>`<div style="display:flex;gap:6px;margin-bottom:6px">
+        <input id="gb-n-${i}" value="${it.name}" style="flex:1">
+        <input id="gb-a-${i}" type="number" value="${it.amount}" inputmode="decimal" style="width:110px">
+        <button class="btn btn-danger btn-sm" onclick="delDefaultFixed('B',${i})">✕</button>
+      </div>`).join('')}</div>
+      <button class="btn btn-ghost btn-sm mt-1" onclick="addDefaultFixed('B')">+ Agregar</button>
+      <div style="margin-top:16px"><button class="btn btn-primary" onclick="saveDefaultFixed()">Guardar</button></div>`;
+  } else if(settingsTab==='historial'){
+    const st=load();
+    const allMonths=Object.values(st.months||{}).sort((a,b)=>b.year!==a.year?b.year-a.year:b.month-a.month);
+    body.innerHTML=allMonths.length?`
+      <p class="text-muted" style="font-size:.82rem;margin-bottom:12px">Registro de meses anteriores. Cierra el mes activo para guardar su saldo final.</p>
+      ${allMonths.map(mm=>{
+        const cal2=buildCal(mm.year)[mm.month];
+        const cs2=calc(mm);
+        const closed=mm.status==='closed';
+        const statusBadge=closed?
+          `<span class="badge-mes-cerrado">cerrado</span>`:
+          `<span class="badge-mes-activo">activo</span>`;
+        return`<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-weight:700">${cal2.name} ${mm.year} ${statusBadge}</span>
+            <span style="font-size:.88rem;font-weight:700;color:${closed?'var(--green)':'var(--text)'}">${fmt(closed?mm.finalBalance:cs2.enCuenta)}</span>
+          </div>
+          <div style="font-size:.76rem;color:var(--muted)">Ingreso: ${fmt(mm.income)} · Gastado: ${fmt(cs2.totalSpent)} · ${closed?`Saldo cierre: ${fmt(mm.finalBalance)}`:`En tu cuenta: ${fmt(cs2.enCuenta)}`}${mm.closedAt?` · Cerrado el ${fmtDate(mm.closedAt)}`:''}</div>
+        </div>`;
+      }).join('')}` : '<div class="empty">Sin historial de meses.</div>';
+  } else if(settingsTab==='cuotas'){
+    const now=today();
+    const amActive=activeMonth();
+    const defMonth=amActive?`${amActive.year}-${String(amActive.month).padStart(2,'0')}`:now.slice(0,7);
+    const m=parseInt(now.split('-')[1]);const y=parseInt(now.split('-')[0]);
+    body.innerHTML=`
+      <p class="text-muted" style="font-size:.82rem;margin-bottom:12px">Las cuotas activas se incluyen automáticamente en cada nuevo mes.</p>
+      <div id="cuotas-list">${cuotas.length?cuotas.map((c,i)=>{
+        const start=c.startYear*12+c.startMonth;
+        const cur=y*12+m;
+        const elapsed=Math.max(0,cur-start+1);
+        const remaining=Math.max(0,c.totalCuotas-elapsed+1);
+        const active=elapsed>=1&&elapsed<=c.totalCuotas;
+        return`<div class="cuota-item">
+          <div style="flex:1"><div class="cuota-name">${c.name}</div>
+          <div class="cuota-info">${fmt(c.monthlyAmount)}/mes · ${c.totalCuotas} cuotas · ${active?`cuota ${elapsed}/${c.totalCuotas} — quedan ${remaining}`:'finalizada'}</div></div>
+          <button class="btn btn-danger btn-sm" onclick="delCuota('${c.id}')">✕</button>
+        </div>`;
+      }).join(''):'<div class="empty" style="padding:16px">Sin cuotas registradas.</div>'}</div>
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:14px">
+        <div class="group-title" style="margin-bottom:10px">Agregar cuota</div>
+        <label class="label first">Descripción</label><input id="nq-name" placeholder="Ej: TV Samsung">
+        <label class="label">Monto mensual</label><input id="nq-amt" type="number" placeholder="50000" inputmode="decimal">
+        <div class="two-col">
+          <div><label class="label">N° de cuotas</label><input id="nq-total" type="number" placeholder="12" min="1" inputmode="numeric"></div>
+          <div><label class="label">Mes de inicio</label><input id="nq-month" type="month" value="${defMonth}"></div>
+        </div>
+        <button class="btn btn-success" style="margin-top:12px" onclick="addCuota()">Agregar cuota</button>
+      </div>`;
+  }
+}
+
+function savePerfil(){
+  const cfg=loadConfig();
+  cfg.name=document.getElementById('cfg-name').value.trim();
+  cfg.weeklyBudget=parseInt(document.getElementById('cfg-semanal').value)||cfg.weeklyBudget;
+  // Collect periodic expenses
+  const existing=cfg.periodicExpenses||[];
+  const pes=existing.map((p,i)=>({
+    id:p.id,
+    name:document.getElementById(`cpe-n-${i}`)?.value.trim()||p.name,
+    amount:parseInt(document.getElementById(`cpe-a-${i}`)?.value)||p.amount
+  })).filter(p=>p.name&&p.amount>0);
+  cfg.periodicExpenses=pes;
+  saveConfig(cfg);toast('Guardado ✓');renderSettings();
+}
+function addCfgPE(){
+  const cfg=loadConfig();
+  const pes=cfg.periodicExpenses||[];
+  // Read current values before adding
+  pes.forEach((p,i)=>{
+    const n=document.getElementById(`cpe-n-${i}`)?.value.trim();
+    const a=parseInt(document.getElementById(`cpe-a-${i}`)?.value);
+    if(n)p.name=n;if(a)p.amount=a;
+  });
+  const newId=pes.length===0?'feria':`feria${pes.length+1}`;
+  pes.push({id:newId,name:'',amount:0});
+  cfg.periodicExpenses=pes;saveConfig(cfg);renderSettings();
+  setTimeout(()=>{const ins=document.querySelectorAll('[id^=cpe-n-]');if(ins.length)ins[ins.length-1].focus();},50);
+}
+function delCfgPE(idx){
+  const cfg=loadConfig();
+  cfg.periodicExpenses=(cfg.periodicExpenses||[]).filter((_,i)=>i!==idx);
+  saveConfig(cfg);renderSettings();
+}
+
+function saveDefaultFixed(){
+  const cfg=loadConfig();
+  const ga=[],gb=[];
+  document.querySelectorAll('[id^=ga-n-]').forEach((_,i)=>{
+    const n=document.getElementById(`ga-n-${i}`)?.value;
+    const a=parseInt(document.getElementById(`ga-a-${i}`)?.value);
+    if(n&&a)ga.push({name:n,amount:a});
+  });
+  document.querySelectorAll('[id^=gb-n-]').forEach((_,i)=>{
+    const n=document.getElementById(`gb-n-${i}`)?.value;
+    const a=parseInt(document.getElementById(`gb-a-${i}`)?.value);
+    if(n&&a)gb.push({name:n,amount:a});
+  });
+  cfg.defaultGroupA=ga;cfg.defaultGroupB=gb;
+  saveConfig(cfg);toast('Guardado ✓');renderSettings();
+}
+
+function addDefaultFixed(group){
+  const cfg=loadConfig();
+  const key=group==='A'?'defaultGroupA':'defaultGroupB';
+  cfg[key].push({name:'Nuevo gasto',amount:0});
+  saveConfig(cfg);renderSettings();
+}
+
+function delDefaultFixed(group,idx){
+  const cfg=loadConfig();
+  const key=group==='A'?'defaultGroupA':'defaultGroupB';
+  cfg[key].splice(idx,1);
+  saveConfig(cfg);renderSettings();
+}
+
+function addCuota(){
+  const name=document.getElementById('nq-name').value.trim();
+  const amt=parseInt(document.getElementById('nq-amt').value);
+  const total=parseInt(document.getElementById('nq-total').value);
+  const monthVal=document.getElementById('nq-month').value;
+  if(!name||!amt||!total||!monthVal){toast('Completa todos los campos.','danger');return}
+  const [sy,sm]=monthVal.split('-').map(Number);
+  const newId=uid();
+  const cuotas=loadCuotas();
+  cuotas.push({id:newId,name,monthlyAmount:amt,totalCuotas:total,startYear:sy,startMonth:sm});
+  saveCuotas(cuotas);
+  // If this cuota starts in the current active month, add it immediately to groupC
+  const md=activeMonth();
+  if(md&&md.year===sy&&md.month===sm){
+    md.groupC=[...(md.groupC||[]),{name,amount:amt,paid:false,cuotaNum:1,totalCuotas:total,cuotaId:newId}];
+    saveMonth(md);
+  }
+  renderSettings();
+  render();
+  toast(`Cuota "${name}" agregada`,'ok');
+}
+
+function delCuota(id){
+  showConfirm('Eliminar cuota','¿Eliminar esta cuota? Ya no aparecerá en nuevos meses.',
+    ()=>{
+      saveCuotas(loadCuotas().filter(c=>c.id!==id));
+      const md=activeMonth();
+      if(md&&(md.groupC||[]).some(c=>c.cuotaId===id)){
+        md.groupC=md.groupC.filter(c=>c.cuotaId!==id);
+        saveMonth(md);render();
+      }
+      renderSettings();
+    });
+}
+
+function closeCurrentMonth(){
+  const md=activeMonth();if(!md)return;
+  if(md.status==='closed'){toast('Este mes ya está cerrado.','warn');return}
+  const cs=calc(md);
+  const cal=buildCal(md.year)[md.month];
+  showConfirm(`Cerrar ${cal.name} ${md.year}`,
+    `Ingreso: <strong>${fmt(md.income)}</strong> · Gastado: <strong>${fmt(cs.totalSpent)}</strong><br>Saldo final en cuenta: <strong>${fmt(cs.enCuenta)}</strong><br><br>El saldo quedará guardado y se usará como saldo inicial del próximo mes.`,
+    ()=>{
+      md.status='closed';md.finalBalance=cs.enCuenta;md.closedAt=today();
+      saveMonth(md);render();
+      toast(`${cal.name} cerrado — saldo: ${fmt(cs.enCuenta)}`,'ok');
+    },'Cerrar mes','btn-primary');
+}
+
+// ── HELP ──────────────────────────────────────────────────────────────────────
+function openHelp(){
+  const cfg=loadConfig();
+  const pes=cfg.periodicExpenses||[];
+  document.getElementById('overlay-help').classList.add('open');
+  document.getElementById('modal-help').innerHTML=`
+    <h2>❓ Cómo funciona Wizard</h2>
+    <div class="alert alert-info" style="margin-bottom:16px">
+      🎉 <strong>¡Felicitaciones!</strong> Ya ordenaste tus presupuestos. Ahora te explico cómo funciona Wizard para que le saques el máximo partido.
+    </div>
+
+    <div class="help-section">
+      <h3>1. Inicio de mes</h3>
+      <p>Presiona <strong>"+ Nuevo mes"</strong> y el asistente te guía paso a paso:</p>
+      <ul>
+        <li>Confirmas tu <strong>presupuesto semanal</strong> y si tienes gastos dominicales.</li>
+        <li>Ingresas tu <strong>saldo previo</strong> (antes del sueldo) y tu <strong>ingreso del mes</strong>.</li>
+        <li>Revisas y ajustas tus <strong>gastos fijos</strong> (puedes agregar o eliminar).</li>
+        <li>Ves el <strong>panorama del mes</strong> con todo distribuido.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>2. Los 4 números clave</h3>
+      <ul>
+        <li><strong>📅 Esta semana</strong> — lo que te queda del presupuesto semanal (lunes a domingo). Al terminar la semana el sobrante pasa a Dinero libre.</li>
+        <li><strong>💚 Dinero libre</strong> — plata disponible y no comprometida: sobrantes acumulados de semanas anteriores. <em>¡Es tuyo para lo que quieras!</em> Investir, ahorrar, comprarte algo, salir a comer.</li>
+        <li><strong>🔒 Comprometido</strong> — plata que ya tiene destino: gastos fijos pendientes${pes.length?` + dominicales pendientes`:''} + semanas futuras. No tocar, está reservado.</li>
+        <li><strong>🏦 En tu cuenta</strong> — tu saldo bancario real (saldo previo + ingreso − lo que has gastado). Toca cualquier número para ver el desglose.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>3. Registra el gasto apenas lo hagas</h3>
+      <p>Esto es lo más importante de todo. ¿Por qué?</p>
+      <ul>
+        <li>✅ <strong>Te saca una carga de encima</strong> — lo registras y ya no tienes que acordarte.</li>
+        <li>✅ <strong>No se te olvida</strong> — los gastos pequeños son fáciles de olvidar.</li>
+        <li>⚠️ <strong>Si intentas registrar gastos de días pasados, la realidad se distorsiona</strong> — los números del día se ven bien pero no reflejan lo que realmente gastas.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>4. Tipos de presupuesto al registrar</h3>
+      <p>Escribe fecha, descripción y monto, y elige el tipo:</p>
+      <ul>
+        <li><code>Semanal</code> — gastos del día a día (almuerzo, café, uber). Tienes ${fmt(cfg.weeklyBudget)} por semana (lunes a domingo).</li>
+        <li><code>Dinero libre</code> — para gastos especiales o imprevistos. Es lo que sobra después de reservar todo.</li>
+        ${pes.map(p=>`<li><code>${p.name}</code> — gasto semanal recurrente de ${fmt(p.amount)}. El monto se llena automáticamente.</li>`).join('')}
+        <li><code>Gasto fijo</code> — para registrar el pago efectivo de un Grupo A o B (marca además el ✓ en la pestaña Fijos).</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>5. ¿Sobre qué monto se arma el mes?</h3>
+      <p>El presupuesto se distribuye sobre tu <strong>ingreso mensual</strong>, no sobre el saldo en banco. El saldo previo sirve solo para calcular el "En tu cuenta" real:</p>
+      <ul>
+        <li><em>Ejemplo:</em> tienes $100.000 antes del sueldo y recibes $1.500.000 → el presupuesto se arma sobre $1.500.000, pero "En tu cuenta" parte en $1.600.000.</li>
+        <li>"En tu cuenta" baja a medida que registras gastos durante el mes.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>6. Gastos Fijos — Grupo A vs Grupo B</h3>
+      <ul>
+        <li><strong>Grupo A: Exactos</strong> — montos que <em>nunca cambian</em> mes a mes (Netflix, Gym, seguro de salud). Wizard los usa tal cual, sin necesidad de revisar.</li>
+        <li><strong>Grupo B: Variables</strong> — pagos que siempre haces, pero el monto puede variar un poco (teléfono, internet, dividendo). Cada mes puedes confirmar el monto actualizado.</li>
+        <li>En ambos grupos marcas ✓ cuando los pagas, y eso los saca de "Comprometido".</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>7. Semanas y dinero libre</h3>
+      <p>Las semanas van de lunes a domingo. Si te <em>sobra</em> plata en una semana, pasa automáticamente a dinero libre. Si <em>gastas de más</em>, se descuenta del dinero libre.</p>
+    </div>
+
+    <div class="help-section">
+      <h3>8. ¿Qué es una semana colgada?</h3>
+      <p>Ocurre cuando el <strong>último lunes de un mes cae en una semana que no alcanza a terminar ese mismo mes</strong>. Como las semanas van siempre de lunes a domingo, esa semana le "pertenece" al mes donde cae el lunes — aunque sus últimos días sean del mes siguiente.</p>
+      <ul>
+        <li><em>Ejemplo:</em> marzo 2026 tiene su último lunes el 30. Esa semana va del 30 de marzo al 5 de abril → pertenece a marzo. Abril empieza recién el <strong>lunes 6 de abril</strong>.</li>
+        <li>Wizard te avisa de esto en la pestaña <strong>Semanas</strong> y al crear un mes nuevo.</li>
+        <li>⚠️ Si registras un gasto semanal en un domingo de la semana colgada, Wizard te avisará que ese domingo pertenece al mes anterior.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>9. Gastos dominicales</h3>
+      <p>Son pagos que haces <strong>todas las semanas</strong> — como recargar la BIP, echar bencina, ir al supermercado o la feria del barrio. No son literalmente solo del domingo, sino que son gastos regulares de cada semana que se registran y controlan semana a semana:</p>
+      <ul>
+        <li>Wizard los reserva en "Comprometido" desde el inicio del mes.</li>
+        <li>Al registrar el pago, elige ese presupuesto en el menú.</li>
+        <li>La pestaña <strong>Semanal</strong> muestra qué semanas están pagadas y cuáles pendientes.</li>
+        <li>Agrégalos o modifícalos en ⚙️ Configuración.</li>
+      </ul>
+    </div>
+
+    <div class="help-section">
+      <h3>10. Cuotas</h3>
+      <p>En ⚙️ Configuración → Cuotas registras compras a plazo. Cada mes nuevo las incluye automáticamente como gasto fijo (ej: <em>TV Samsung cuota 3/12</em>). Cuando termina la última cuota, desaparece sola.</p>
+    </div>
+
+    <div class="help-section">
+      <h3>11. Personalizar</h3>
+      <p>En Configuración puedes cambiar tu nombre, activar/desactivar gastos dominicales, ajustar el presupuesto semanal y editar los gastos fijos por defecto para nuevos meses.</p>
+    </div>
+
+    <div class="mfooter"><button class="btn btn-primary" onclick="document.getElementById('overlay-help').classList.remove('open')">Entendido</button></div>`;
+}
+
+// ── THEME ─────────────────────────────────────────────────────────────────────
+function applyTheme(t){
+  if(t==='dark'||t==='light')document.documentElement.setAttribute('data-theme',t);
+  else document.documentElement.removeAttribute('data-theme');
+  const orb=document.getElementById('theme-orb');
+  if(orb){
+    const effective=t==='auto'||!t?(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t;
+    orb.textContent=effective==='dark'?'🌙':'☀️';
+  }
+}
+function toggleTheme(){
+  const cur=localStorage.getItem('gf_theme')||'auto';
+  // auto → opposite of system, then explicit toggle
+  const sysDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  const effective=cur==='auto'?(sysDark?'dark':'light'):cur;
+  const next=effective==='dark'?'light':'dark';
+  localStorage.setItem('gf_theme',next);
+  applyTheme(next);
+}
+
+// ── MORE MENU ─────────────────────────────────────────────────────────────────
+function openMoreMenu(){
+  const md=activeMonth();
+  const items=[
+    {ico:'⚙️',label:'Configuración',fn:'openSettings();hideConfirm();'},
+    {ico:'❓',label:'Instrucciones',fn:'openHelp();hideConfirm();'},
+    {ico:'➕',label:'Nuevo mes',fn:'openWizard();hideConfirm();'},
+  ];
+  if(md&&md.status!=='closed')items.push({ico:'✅',label:'Cerrar mes',fn:'closeCurrentMonth();hideConfirm();'});
+  items.push({ico:'💾',label:'Exportar copia de seguridad',fn:'exportData();'});
+  items.push({ico:'📂',label:'Importar copia de seguridad',fn:'importData();'});
+  items.push({ico:'📲',label:'Instalar en mi teléfono',fn:'showInstallHelp();'});
+  const u=storageUsage();
+  const last=lastBackupLabel();
+  document.getElementById('confirm-title').textContent='Más opciones';
+  document.getElementById('confirm-body').innerHTML=items.map(i=>
+    `<button class="btn btn-ghost" style="width:100%;justify-content:flex-start;text-align:left;margin-bottom:6px;padding:12px 14px;display:flex;align-items:center;gap:10px;font-size:.95rem" onclick="${i.fn}"><span style="font-size:1.1rem">${i.ico}</span> ${i.label}</button>`
+  ).join('')+
+  `<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);text-align:center;line-height:1.6">Almacenamiento: ${(u.bytes/1024).toFixed(1)} KB · ${u.items} mes${u.items===1?'':'es'}<br>${last}</div>`;
+  document.querySelector('#overlay-confirm .mfooter').style.display='none';
+  document.getElementById('overlay-confirm').classList.add('open');
+}
+
+// ── BACKUP / RESTORE ───────────────────────────────────────────────────────────
+function lastBackupLabel(){
+  const t=localStorage.getItem('gf_last_backup');
+  if(!t)return '⚠️ Nunca has exportado un respaldo';
+  const d=new Date(+t),now=new Date();
+  const days=Math.floor((now-d)/86400000);
+  const ago=days===0?'hoy':days===1?'ayer':`hace ${days} días`;
+  const warn=days>=14?'⚠️ ':'';
+  return `${warn}Último respaldo: ${ago}`;
+}
+function exportData(){
+  const s=load();
+  const payload={app:'wizard',v:2,exportedAt:new Date().toISOString(),data:s};
+  const json=JSON.stringify(payload,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const dt=new Date();
+  const fname=`wizard-backup-${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}.json`;
+  const a=document.createElement('a');
+  a.href=url;a.download=fname;document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},100);
+  localStorage.setItem('gf_last_backup',Date.now().toString());
+  toast('💾 Respaldo descargado: '+fname,'ok');
+  hideConfirm();
+}
+function importData(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='.json,application/json';
+  inp.onchange=()=>{
+    const file=inp.files&&inp.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      let parsed;
+      try{parsed=JSON.parse(reader.result)}
+      catch(e){toast('❌ El archivo no es un JSON válido.','danger');return}
+      // Accept both wrapped {app,data} and raw store
+      const store=parsed&&parsed.data&&parsed.app==='wizard'?parsed.data:parsed;
+      if(!store||typeof store!=='object'||(!store.months&&!store.config)){
+        toast('❌ No parece un respaldo de Wizard.','danger');return;
+      }
+      const nMonths=store.months?Object.keys(store.months).length:0;
+      const when=parsed.exportedAt?new Date(parsed.exportedAt).toLocaleDateString('es-CL'):'desconocida';
+      showConfirm('Importar respaldo',
+        `Vas a <strong>reemplazar todos los datos actuales</strong> con este respaldo:<br><br>• ${nMonths} mes${nMonths===1?'':'es'}<br>• Fecha del respaldo: ${when}<br><br>Esto no se puede deshacer. ¿Continuar?`,
+        ()=>{
+          if(save(store)){
+            _store=store;
+            toast('✅ Datos importados correctamente','ok');
+            // Re-apply theme + re-render fresh
+            render();
+            const cur=document.querySelector('.bnav-item.active')?.dataset.tab||'gastos';
+            switchTab('gastos',document.querySelector('.bnav-item[data-tab="gastos"]'));
+          }
+        },'Sí, importar','btn-danger');
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+// ── INSTALL ────────────────────────────────────────────────────────────────────
+let _deferredInstall=null;
+function showInstallHelp(){
+  const ua=navigator.userAgent;
+  const isIOS=/iphone|ipad|ipod/i.test(ua);
+  const isAndroid=/android/i.test(ua);
+  const isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone;
+  let body='';
+  if(isStandalone){
+    body=`<div style="text-align:center;padding:12px 0"><div style="font-size:2.5rem;margin-bottom:8px">✅</div><div style="font-weight:600">Ya está instalada</div><div style="font-size:.8rem;color:var(--muted);margin-top:6px">Estás usando Wizard como app.</div></div>`;
+  } else if(isIOS){
+    body=`<ol style="padding-left:20px;line-height:1.7;font-size:.88rem"><li>Toca el ícono <strong>Compartir</strong> <span style="font-size:1.1em">⬆️</span> (abajo en Safari)</li><li>Desliza y elige <strong>"Agregar a pantalla de inicio"</strong></li><li>Confirma con <strong>"Agregar"</strong></li></ol><div style="font-size:.78rem;color:var(--muted);margin-top:10px">Se abrirá como app, sin barra de Safari. Tus datos quedan en este teléfono.</div>`;
+  } else if(_deferredInstall){
+    body=`<div style="text-align:center;padding:8px 0"><button class="btn btn-primary" style="padding:14px 24px" onclick="triggerInstall()">📲 Instalar Wizard</button><div style="font-size:.78rem;color:var(--muted);margin-top:10px">Aparecerá en tu pantalla de inicio como app.</div></div>`;
+  } else if(isAndroid){
+    body=`<ol style="padding-left:20px;line-height:1.7;font-size:.88rem"><li>Toca el menú <strong>⋮</strong> de Chrome (arriba a la derecha)</li><li>Elige <strong>"Agregar a pantalla principal"</strong> o <strong>"Instalar aplicación"</strong></li><li>Confirma</li></ol><div style="font-size:.78rem;color:var(--muted);margin-top:10px">Si la opción no aparece: este archivo no está hosteado online. Pídele a quien te lo pasó que lo suba a GitHub Pages o similar.</div>`;
+  } else {
+    body=`<div style="font-size:.88rem;line-height:1.6">Para instalar Wizard como app:</div><ul style="padding-left:20px;line-height:1.7;font-size:.84rem;margin-top:8px"><li><strong>iPhone/iPad (Safari)</strong>: Compartir → Agregar a pantalla de inicio</li><li><strong>Android (Chrome)</strong>: Menú ⋮ → Instalar aplicación</li><li><strong>PC/Mac (Chrome/Edge)</strong>: Ícono de instalar en la barra de URL</li></ul>`;
+  }
+  document.getElementById('confirm-title').textContent='📲 Instalar Wizard';
+  document.getElementById('confirm-body').innerHTML=body+`<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:.75rem;color:var(--muted)">💡 <strong>Para compartir:</strong> pásale el archivo <code style="background:var(--border);padding:1px 5px;border-radius:3px">index.html</code> a quien quieras (AirDrop / WhatsApp / mail). Cada persona tendrá sus propios datos.</div>`;
+  document.querySelector('#overlay-confirm .mfooter').style.display='';
+  document.querySelector('#overlay-confirm .mfooter').innerHTML=`<button class="btn btn-ghost" onclick="hideConfirm()">Cerrar</button>`;
+  document.getElementById('overlay-confirm').classList.add('open');
+}
+function triggerInstall(){
+  if(!_deferredInstall)return;
+  _deferredInstall.prompt();
+  _deferredInstall.userChoice.finally(()=>{_deferredInstall=null;hideConfirm()});
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredInstall=e});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  applyTheme(localStorage.getItem('gf_theme')||'auto');
+  matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
+    if((localStorage.getItem('gf_theme')||'auto')==='auto')applyTheme('auto');
+  });
+  document.getElementById('f-date').value=today();
+  // close overlays on background click
+  ['overlay-wizard','overlay-settings','overlay-help','overlay-edit','overlay-confirm'].forEach(id=>{
+    document.getElementById(id).addEventListener('click',function(e){
+      if(e.target===this){
+        this.classList.remove('open');
+        if(id==='overlay-confirm'){
+          const f=this.querySelector('.mfooter');if(f)f.style.display='';
+        }
+      }
+      if(id==='overlay-settings')render();
+    });
+  });
+  // Enter para registrar gasto
+  document.getElementById('f-desc').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-amount').focus()});
+  document.getElementById('f-amount').addEventListener('keydown',e=>{if(e.key==='Enter')addExpense()});
+  render();
+});
+</script>
+</body>
+</html>
