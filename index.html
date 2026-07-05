@@ -63,7 +63,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .kn{border-radius:20px;padding:15px 14px;cursor:pointer;transition:transform .12s,box-shadow .12s;position:relative;flex-shrink:0;width:138px}
 .kn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.13)}
 .kn-active{box-shadow:0 0 0 2px var(--accent),0 6px 20px rgba(0,0,0,.12);transform:translateY(-2px)}
-.kn-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:8px}
+.kn-label{font-size:.58rem;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:8px;white-space:nowrap}
 .kn-val{font-size:1.45rem;font-weight:900;font-family:var(--serif);line-height:1}
 .kn-hint{font-size:.62rem;margin-top:6px;opacity:.8}
 /* Legacy — kept for wizard summary previews */
@@ -755,13 +755,14 @@ function render(){
   document.getElementById('hdr-month').textContent=`${cal.name} ${md.year}`;
   const cs=calc(md);
 
-  document.getElementById('kn-semana').textContent=fmt(cs.semRem);
+  [['kn-semana',cs.semRem],['kn-libre',cs.libreRem],['kn-comp',cs.comp],['kn-cuenta',cs.enCuenta]].forEach(([id,v])=>{
+    const el=document.getElementById(id);
+    el.textContent=fmt(v);
+    el.style.fontSize=el.textContent.length>9?'1.15rem':'';
+  });
   const semHint=document.getElementById('kn-semana-hint');
   if(semHint)semHint.textContent=`Sem ${cs.curWeek.num} · lun–dom`;
-  document.getElementById('kn-libre').textContent=fmt(cs.libreRem);
   document.getElementById('kn-libre-card').className='kn '+(cs.libreRem<0?'kn-crimson':'kn-w2');
-  document.getElementById('kn-comp').textContent=fmt(cs.comp);
-  document.getElementById('kn-cuenta').textContent=fmt(cs.enCuenta);
   syncKnRing();
 
   const w=cs.curWeek;
