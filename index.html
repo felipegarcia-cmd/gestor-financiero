@@ -102,11 +102,12 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .wbar-foot{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:5px}
 
 /* Form */
-.form-row{display:grid;grid-template-columns:120px 1fr 110px;gap:8px;margin-bottom:8px}
+.form-row{display:grid;grid-template-columns:128px 1fr 110px;gap:8px;margin-bottom:8px}
 .form-row2{display:grid;grid-template-columns:1fr 120px;gap:8px}
 .quick-add{padding:14px}
 .quick-add .sec-title{margin-bottom:10px}
 input,select,textarea{font-family:inherit;font-size:.88rem;border-radius:10px;border:1px solid var(--input-border);padding:9px 11px;width:100%;outline:none;color:var(--text);background:var(--input-bg);transition:border-color .15s,box-shadow .15s}
+input[type=date]{padding-left:8px;padding-right:2px}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
 input[readonly]{background:var(--bg);color:var(--muted)}
 .sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:12px}
@@ -166,9 +167,10 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .fijo-name{flex:1;font-size:.88rem}
 .fijo-amount{font-size:.88rem;font-weight:600;margin-right:8px;font-family:var(--serif)}
 .fijo-item.paid .fijo-name{text-decoration:line-through;color:var(--muted)}
-.group-header{display:flex;justify-content:space-between;align-items:center;margin:4px 0 8px}
-.group-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.group-total{font-size:.8rem;color:var(--muted);font-family:var(--serif)}
+.group-header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:4px}
+.group-title{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.group-total{font-size:.8rem;color:var(--muted);font-family:var(--serif);white-space:nowrap;flex-shrink:0}
+.group-desc{font-size:.72rem;color:var(--muted);margin:3px 0 8px;line-height:1.4}
 
 /* Feria */
 .feria-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -217,12 +219,13 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .wz-progress-track{flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden}
 .wz-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:99px;transition:width .25s}
 .wz-progress-label{font-size:.68rem;color:var(--muted);font-weight:700;white-space:nowrap;flex-shrink:0}
-.label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;margin-top:14px}
+.label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;margin-top:14px;white-space:nowrap}
 .label:first-of-type,.label.first{margin-top:0}
 
 /* Settings tabs */
-.stabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px}
-.stab{padding:8px 14px;border:none;background:transparent;font-size:.83rem;color:var(--muted);cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px}
+.stabs{display:flex;gap:4px;border-bottom:2px solid var(--border);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.stabs::-webkit-scrollbar{display:none}
+.stab{padding:8px 14px;border:none;background:transparent;font-size:.83rem;color:var(--muted);cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap}
 .stab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
 
 /* Summary table */
@@ -274,8 +277,15 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 #tab-gastos,#tab-semanas,#tab-fijos,#tab-feria,#tab-stats{transition:opacity .14s}
 
 @media(max-width:480px){
-  .form-row{grid-template-columns:95px 1fr 95px}
+  .form-row{grid-template-columns:122px 1fr 86px;gap:6px}
+  .form-row input[type=date]{font-size:.8rem}
   .kn-hint{display:none}
+  .stab{padding:8px 7px;font-size:.78rem}
+}
+@media(max-width:640px){
+  .kn-row.fade-r{-webkit-mask-image:linear-gradient(to right,black 85%,transparent 100%);mask-image:linear-gradient(to right,black 85%,transparent 100%)}
+  .kn-row.fade-l{-webkit-mask-image:linear-gradient(to right,transparent 0%,black 6%);mask-image:linear-gradient(to right,transparent 0%,black 6%)}
+  .kn-row.fade-l.fade-r{-webkit-mask-image:linear-gradient(to right,transparent 0%,black 6%,black 85%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,black 6%,black 85%,transparent 100%)}
 }
 
 /* ── DARK MODE ─────────────────────────────────────────────────────────────── */
@@ -396,7 +406,7 @@ input[readonly]{background:var(--bg);color:var(--muted)}
   </div>
 
   <div id="main" class="hidden">
-    <div class="kn-row">
+    <div class="kn-row" id="kn-row">
       <div class="kn kn-w1" onclick="toggleBreakdown('semana')" id="kn-semana-card">
         <div class="kn-label">📅 Esta semana</div>
         <div class="kn-val" id="kn-semana"></div>
@@ -954,10 +964,10 @@ function renderFijos(md){
     const p=items.filter(x=>x.paid).reduce((s,x)=>s+x.amount,0);
     return`<div class="divider">
       <div class="group-header">
-        <div><span class="group-title">${title}</span>
-        <div style="font-size:.72rem;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:2px">${desc}</div></div>
+        <span class="group-title">${title}</span>
         <span class="group-total">${fmt(p)} / ${fmt(t)}</span>
       </div>
+      <div class="group-desc">${desc}</div>
       <div class="wbar-track" style="margin-bottom:8px"><div class="wbar-fill fill-ok" style="width:${t?Math.round(p/t*100):0}%"></div></div>
       ${items.map((it,i)=>`<div class="fijo-item ${it.paid?'paid':''}">
         <input type="checkbox" ${it.paid?'checked':''} onchange="toggleFijo('${key}',${i},this.checked)">
@@ -967,9 +977,9 @@ function renderFijos(md){
     </div>`;
   }
   el.innerHTML='<div class="sec-title">Gastos fijos</div>'+
-    group('Gastos Fijos — Grupo A: Exactos','Montos que no cambian mes a mes (suscripciones, seguros, mensualidades exactas). Márcalos cuando los pagas.',md.groupA,'groupA')+
-    group('Gastos Fijos — Grupo B: Variables','Cuentas que siempre pagas pero el monto puede variar un poco (teléfono, internet, servicios). Ajusta si cambió.',md.groupB,'groupB')+
-    group('Grupo C — Cuotas','Compras a plazo activas este mes. Se cargan automáticamente al crear el mes.',md.groupC,'groupC')+
+    group('Grupo A: Exactos','Montos que no cambian mes a mes (suscripciones, seguros, mensualidades exactas). Márcalos cuando los pagas.',md.groupA,'groupA')+
+    group('Grupo B: Variables','Cuentas que siempre pagas pero el monto puede variar un poco (teléfono, internet, servicios). Ajusta si cambió.',md.groupB,'groupB')+
+    group('Grupo C: Cuotas','Compras a plazo activas este mes. Se cargan automáticamente al crear el mes.',md.groupC,'groupC')+
     `<div class="mt-2"><button class="btn btn-ghost btn-sm" onclick="openSettings('cuotas')">+ Gestionar cuotas</button></div>`;
 }
 
@@ -1588,7 +1598,7 @@ function renderSettings(){
   const cfg=loadConfig();
   const cuotas=loadCuotas();
   const el=document.getElementById('modal-settings');
-  const tabs=[['perfil','👤 Perfil'],['fijos','📋 Gastos fijos'],['cuotas','💳 Cuotas'],['historial','📅 Historial']];
+  const tabs=[['perfil','👤 Perfil'],['fijos','📋 Fijos'],['cuotas','💳 Cuotas'],['historial','📅 Historial']];
   el.innerHTML=`
     <h2>⚙️ Configuración</h2>
     <div class="stabs">
@@ -1685,7 +1695,7 @@ function renderSettings(){
         <label class="label first">Descripción</label><input id="nq-name" placeholder="Ej: TV Samsung">
         <label class="label">Monto mensual</label><input id="nq-amt" type="number" placeholder="50000" inputmode="decimal">
         <div class="two-col">
-          <div><label class="label">N° de cuotas</label><input id="nq-total" type="number" placeholder="12" min="1" inputmode="numeric"></div>
+          <div><label class="label">Cuotas</label><input id="nq-total" type="number" placeholder="12" min="1" inputmode="numeric"></div>
           <div><label class="label">Mes de inicio</label><input id="nq-month" type="month" value="${defMonth}"></div>
         </div>
         <button class="btn btn-success" style="margin-top:12px" onclick="addCuota()">Agregar cuota</button>
@@ -2138,6 +2148,16 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Enter para registrar gasto
   document.getElementById('f-desc').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-amount').focus()});
   document.getElementById('f-amount').addEventListener('keydown',e=>{if(e.key==='Enter')addExpense()});
+  // Scroll shadows on the key-numbers row
+  const knRow=document.getElementById('kn-row');
+  const updateKnFade=()=>{
+    const max=knRow.scrollWidth-knRow.clientWidth;
+    knRow.classList.toggle('fade-l',knRow.scrollLeft>4);
+    knRow.classList.toggle('fade-r',knRow.scrollLeft<max-4);
+  };
+  knRow.addEventListener('scroll',updateKnFade,{passive:true});
+  window.addEventListener('resize',updateKnFade);
+  updateKnFade();
   render();
 });
 </script>
