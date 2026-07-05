@@ -195,6 +195,8 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .wchart{display:flex;align-items:flex-end;gap:8px;height:150px;padding:2px 2px 0}
 .wchart-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:100%;min-width:0}
 .wchart-amt{font-size:.64rem;font-weight:700;font-family:var(--serif);color:var(--muted);white-space:nowrap}
+.wchart-bar-area{position:relative;width:100%;height:118px;display:flex;align-items:flex-end}
+.wchart-budget-line{position:absolute;left:0;right:0;border-top:1px dashed var(--muted);opacity:.55}
 .wchart-bar{width:100%;border-radius:7px 7px 0 0;background:var(--bar);transition:height .3s}
 .wchart-bar.cur{background:linear-gradient(180deg,var(--accent-2),var(--accent))}
 .wchart-bar.over{background:var(--bar-over)}
@@ -211,6 +213,10 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .modal h2{font-size:1.08rem;margin-bottom:3px}
 .modal .sub{font-size:.82rem;color:var(--muted);margin-bottom:16px;line-height:1.5}
 .mfooter{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.wz-progress{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.wz-progress-track{flex:1;height:4px;background:var(--border);border-radius:99px;overflow:hidden}
+.wz-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent-2),var(--accent));border-radius:99px;transition:width .25s}
+.wz-progress-label{font-size:.68rem;color:var(--muted);font-weight:700;white-space:nowrap;flex-shrink:0}
 .label{display:block;font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;margin-top:14px}
 .label:first-of-type,.label.first{margin-top:0}
 
@@ -258,7 +264,7 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 .mt-2{margin-top:12px}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);padding:11px 20px;border-radius:12px;font-size:.85rem;font-weight:600;color:#fff;z-index:300;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 32px);text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.toast{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(8px);padding:11px 20px;border-radius:12px;font-size:.85rem;font-weight:600;color:#fff;z-index:300;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 32px);text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast-ok{background:var(--green)}
 .toast-danger{background:var(--red)}
@@ -952,6 +958,7 @@ function renderFijos(md){
         <div style="font-size:.72rem;color:var(--muted);font-weight:400;letter-spacing:0;margin-top:2px">${desc}</div></div>
         <span class="group-total">${fmt(p)} / ${fmt(t)}</span>
       </div>
+      <div class="wbar-track" style="margin-bottom:8px"><div class="wbar-fill fill-ok" style="width:${t?Math.round(p/t*100):0}%"></div></div>
       ${items.map((it,i)=>`<div class="fijo-item ${it.paid?'paid':''}">
         <input type="checkbox" ${it.paid?'checked':''} onchange="toggleFijo('${key}',${i},this.checked)">
         <span class="fijo-name">${it.name}${it.cuotaNum?` <span style="font-size:.72rem;color:var(--muted)">(${it.cuotaNum}/${it.totalCuotas})</span>`:''}</span>
@@ -988,7 +995,7 @@ function renderFeria(md,cs){
       </div>
       ${cal.sun.map(sun=>{
         const isPaid=paid.includes(sun),isPast=sun<=now;
-        const st=isPaid?`<span class="status-paid">✓ Pagado</span>`:isPast?`<span class="status-pend">⚠️ Pendiente</span>`:`<span class="status-next">Próximo</span>`;
+        const st=isPaid?`<span class="status-paid">✓ Pagado</span>`:isPast?`<span style="display:flex;align-items:center;gap:8px"><span class="status-pend">⚠️ Pendiente</span><button class="btn btn-primary btn-sm" onclick="quickPayPeriodic('${sun}','${p.id}')">Pagar →</button></span>`:`<span class="status-next">Próximo</span>`;
         return`<div class="feria-item">
           <div style="${isPaid?'color:var(--muted);':''}font-size:.88rem;font-weight:500">${fmtDateLong(sun)}</div>${st}</div>`;
       }).join('')}
@@ -1080,14 +1087,21 @@ function renderStats(md,cs){
   </div>
 
   <div class="stat-block">
-    <div class="stat-block-title">Semana a semana</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
+      <span class="stat-block-title" style="margin-bottom:0">Semana a semana</span>
+      <span style="font-size:.66rem;color:var(--muted)">- - - presupuesto (${fmtK(cs.SEMANAL)})</span>
+    </div>
     <div class="wchart">
     ${cs.wcs.map(w=>{
       const h=Math.max(8,Math.round(w.spent/maxW*118));
+      const budgetPx=Math.min(118,Math.round(cs.SEMANAL/maxW*118));
       const over=w.spent>cs.SEMANAL;
       return`<div class="wchart-col">
         <span class="wchart-amt ${w.cur?'cur':''}">${fmtK(w.spent)}</span>
-        <div class="wchart-bar ${w.cur?'cur':over?'over':''}" style="height:${h}px"></div>
+        <div class="wchart-bar-area">
+          <div class="wchart-budget-line" style="bottom:${budgetPx}px"></div>
+          <div class="wchart-bar ${w.cur?'cur':over?'over':''}" style="height:${h}px"></div>
+        </div>
         <span class="wchart-lbl ${w.cur?'cur':''}">Sem ${w.num}</span>
       </div>`;
     }).join('')}
@@ -1211,6 +1225,16 @@ function addExpense(){
   }
 }
 
+function quickPayPeriodic(date,peId){
+  const md=activeMonth();if(!md)return;
+  const cfg=loadConfig();
+  const pe=(cfg.periodicExpenses||[]).find(p=>p.id===peId);if(!pe)return;
+  const cat=inferCat(pe.name);const code=nextCode(md);
+  md.expenses=[...(md.expenses||[]),{code,date,desc:pe.name,amount:pe.amount,b:peId,cat}];
+  saveMonth(md);render();
+  toast(`${pe.name} — ${fmt(pe.amount)} registrado`,'ok');
+}
+
 function delExpense(code){
   showConfirm('Eliminar gasto',`¿Eliminar <strong>${code}</strong>? Esta acción no se puede deshacer.`,()=>{
     const md=activeMonth();
@@ -1252,7 +1276,7 @@ function saveExpenseEdit(code){
   const idx=(md.expenses||[]).findIndex(x=>x.code===code);if(idx<0)return;
   const date=document.getElementById('e-date').value;
   const desc=document.getElementById('e-desc').value.trim();
-  const amount=parseInt(document.getElementById('e-amount').value);
+  const amount=parseInt(String(document.getElementById('e-amount').value).replace(/\./g,''));
   const b=document.getElementById('e-budget').value;
   if(!date||!desc||!amount||amount<=0){toast('Completa todos los campos.','danger');return}
   md.expenses[idx]={...md.expenses[idx],date,desc,amount,b,cat:inferCat(desc)};
@@ -1517,6 +1541,9 @@ function renderWizard(){
     },
   ];
   steps[wz.step]();
+  const pct=Math.round((wz.step+1)/steps.length*100);
+  document.getElementById('modal-wizard').insertAdjacentHTML('afterbegin',
+    `<div class="wz-progress"><div class="wz-progress-track"><div class="wz-progress-fill" style="width:${pct}%"></div></div><span class="wz-progress-label">Paso ${wz.step+1} de ${steps.length}</span></div>`);
 }
 
 function collectGA(){
@@ -1625,7 +1652,8 @@ function renderSettings(){
         const statusBadge=closed?
           `<span class="badge-mes-cerrado">cerrado</span>`:
           `<span class="badge-mes-activo">activo</span>`;
-        return`<div style="padding:12px 0;border-bottom:1px solid var(--border)">
+        const key=`${mm.year}-${String(mm.month).padStart(2,'0')}`;
+        return`<div style="padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="viewMonthDetail('${key}')">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
             <span style="font-weight:700">${cal2.name} ${mm.year} ${statusBadge}</span>
             <span style="font-size:.88rem;font-weight:700;color:${closed?'var(--green)':'var(--text)'}">${fmt(closed?mm.finalBalance:cs2.enCuenta)}</span>
@@ -1763,6 +1791,46 @@ function delCuota(id){
       }
       renderSettings();
     });
+}
+
+function viewMonthDetail(key){
+  const s=load();
+  const md=s.months?.[key];if(!md)return;
+  const cal=buildCal(md.year)[md.month];
+  const cs=calc(md);
+  const closed=md.status==='closed';
+  const exps=[...(md.expenses||[])].reverse();
+  const expRows=exps.length?exps.map(e=>`
+    <div class="exp-item">
+      <div class="exp-ico">${e.cat?.e||'📦'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="exp-code">${e.code} · ${fmtDate(e.date)}</div>
+        <div class="exp-desc">${e.desc}</div>
+        <div class="exp-meta">${e.cat?.n&&e.cat.n!=='Otros'?e.cat.n:'Sin categoría'}</div>
+      </div>
+      <div class="exp-right"><div class="exp-amount">−${fmt(e.amount)}</div></div>
+    </div>`).join(''):'<div class="empty">Sin gastos registrados.</div>';
+  const allFixed=[...(md.groupA||[]),...(md.groupB||[]),...(md.groupC||[])];
+  const fixedRows=allFixed.length?allFixed.map(it=>`
+    <div class="fijo-item ${it.paid?'paid':''}">
+      <span style="width:17px;text-align:center;flex-shrink:0">${it.paid?'✓':'○'}</span>
+      <span class="fijo-name">${it.name}</span>
+      <span class="fijo-amount">${fmt(it.amount)}</span>
+    </div>`).join(''):'<div class="empty">Sin gastos fijos.</div>';
+  document.getElementById('overlay-help').classList.add('open');
+  document.getElementById('modal-help').innerHTML=`
+    <h2>📅 ${cal.name} ${md.year}</h2>
+    <p class="sub">${closed?`Cerrado el ${fmtDate(md.closedAt)} · Saldo final: <strong>${fmt(md.finalBalance)}</strong>`:`Mes activo · En tu cuenta: <strong>${fmt(cs.enCuenta)}</strong>`}</p>
+    <table class="stbl" style="margin-bottom:16px">
+      <tr><td>Ingreso</td><td>${fmt(md.income)}</td></tr>
+      <tr><td>Saldo previo</td><td>${fmt(md.initialBalance)}</td></tr>
+      <tr><td>Total gastado</td><td>${fmt(cs.totalSpent)}</td></tr>
+    </table>
+    <div class="sec-title">Gastos fijos</div>
+    <div style="margin-bottom:16px">${fixedRows}</div>
+    <div class="sec-title">Gastos del mes</div>
+    ${expRows}
+    <div class="mfooter"><button class="btn btn-ghost" onclick="document.getElementById('overlay-help').classList.remove('open')">Cerrar</button></div>`;
 }
 
 function closeCurrentMonth(){
@@ -1919,6 +1987,7 @@ function openMoreMenu(){
   ];
   if(md&&md.status!=='closed')items.push({ico:'✅',label:'Cerrar mes',fn:'closeCurrentMonth();hideConfirm();'});
   items.push({ico:'💾',label:'Exportar copia de seguridad',fn:'exportData();'});
+  items.push({ico:'📄',label:'Exportar gastos (CSV)',fn:'exportCSV();'});
   items.push({ico:'📂',label:'Importar copia de seguridad',fn:'importData();'});
   items.push({ico:'📲',label:'Instalar en mi teléfono',fn:'showInstallHelp();'});
   const u=storageUsage();
@@ -1955,6 +2024,28 @@ function exportData(){
   setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},100);
   localStorage.setItem('gf_last_backup',Date.now().toString());
   toast('💾 Respaldo descargado: '+fname,'ok');
+  hideConfirm();
+}
+function csvEscape(v){
+  const s=String(v??'');
+  return /[",\n;]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function exportCSV(){
+  const s=load();
+  const rows=[['Mes','Código','Fecha','Descripción','Categoría','Tipo','Monto']];
+  Object.keys(s.months||{}).sort().forEach(k=>{
+    const md=s.months[k];
+    (md.expenses||[]).forEach(e=>rows.push([k,e.code,e.date,e.desc,e.cat?.n||'',e.b,e.amount]));
+  });
+  const csv=rows.map(r=>r.map(csvEscape).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const dt=new Date();
+  const fname=`wizard-gastos-${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}.csv`;
+  const a=document.createElement('a');
+  a.href=url;a.download=fname;document.body.appendChild(a);a.click();
+  setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url)},100);
+  toast('📄 CSV descargado: '+fname,'ok');
   hideConfirm();
 }
 function importData(){
