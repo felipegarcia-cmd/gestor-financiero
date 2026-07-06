@@ -100,6 +100,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .fill-warn{background:var(--yellow)}
 .fill-danger{background:var(--red)}
 .wbar-foot{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:5px}
+.wbar-today{margin-top:9px;padding-top:9px;border-top:1px dashed var(--border);font-size:.8rem}
+.wbar-today strong{font-family:var(--serif);color:var(--accent);font-size:.95rem}
+.wbar-today span{color:var(--muted);font-size:.72rem}
 
 /* Form */
 .form-row{display:grid;grid-template-columns:128px 1fr 110px;gap:8px;margin-bottom:8px}
@@ -108,6 +111,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .quick-add .sec-title{margin-bottom:10px}
 input,select,textarea{font-family:inherit;font-size:.88rem;border-radius:10px;border:1px solid var(--input-border);padding:9px 11px;width:100%;outline:none;color:var(--text);background:var(--input-bg);transition:border-color .15s,box-shadow .15s}
 input[type=date]{padding-left:8px;padding-right:2px}
+#f-smart{margin-bottom:8px;border:1px solid transparent;background:linear-gradient(var(--input-bg),var(--input-bg)) padding-box,linear-gradient(135deg,var(--accent-2),var(--accent)) border-box}
+.smart-preview{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);background:var(--bg);border:1px dashed var(--input-border);border-radius:10px;padding:7px 10px;margin-bottom:8px;cursor:pointer}
+.smart-preview strong{font-family:var(--serif);color:var(--text)}
+.smart-go{margin-left:auto;color:var(--accent);font-weight:700;white-space:nowrap}
 input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
 input[readonly]{background:var(--bg);color:var(--muted)}
 .sec-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:12px}
@@ -438,10 +445,13 @@ input[readonly]{background:var(--bg);color:var(--muted)}
       </div>
       <div class="wbar-track"><div class="wbar-fill" id="wbar-fill" style="width:0%"></div></div>
       <div class="wbar-foot"><span id="wbar-spent"></span><span id="wbar-budget"></span></div>
+      <div class="wbar-today hidden" id="wbar-today"></div>
     </div>
 
     <div class="card quick-add">
       <div class="sec-title">Registrar gasto</div>
+      <input type="text" id="f-smart" placeholder='⚡ Escribe rápido: "almuerzo 8 lucas ayer"' autocomplete="off">
+      <div id="smart-preview" class="smart-preview" style="display:none"></div>
       <div class="form-row">
         <input type="date" id="f-date">
         <input type="text" id="f-desc" placeholder="Descripción" autocomplete="off">
@@ -630,6 +640,63 @@ function inferCat(desc){
   for(const c of CATS)if(c.k.some(k=>low.includes(k)))return c;
   return CATS[CATS.length-1];
 }
+// Entrada rápida: "almuerzo 8 lucas ayer" → {desc,amount,date,b}
+function parseQuick(raw){
+  let t=(raw||'').trim();
+  if(!t)return null;
+  const cfg=loadConfig();
+  let date=today(),b=null,amount=null,m;
+  const strip=re=>{const x=t.match(re);if(x){t=t.replace(re,' ');return x}return null};
+  const base=new Date(today()+'T12:00:00');
+  const iso=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+  // Fechas relativas
+  if(strip(/\b(antes\s+de\s+ayer|anteayer|antier)\b/i))date=iso(+base-2*864e5);
+  else if(strip(/\bayer\b/i))date=iso(+base-864e5);
+  else if(strip(/\bhoy\b/i))date=today();
+  else{
+    const days=[['domingo',0],['lunes',1],['martes',2],['mi[eé]rcoles',3],['jueves',4],['viernes',5],['s[aá]bado',6]];
+    let hit=false;
+    for(const[name,dow]of days){
+      if(strip(new RegExp('\\b(el\\s+)?'+name+'\\b','i'))){
+        date=iso(+base-((base.getDay()-dow+7)%7)*864e5);hit=true;break;
+      }
+    }
+    if(!hit&&(m=strip(/\b(\d{1,2})[\/\-](\d{1,2})\b/))){
+      const d=+m[1],mo=+m[2],md=activeMonth();
+      const y=md?md.year:base.getFullYear();
+      if(d>=1&&d<=31&&mo>=1&&mo<=12)date=`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+  }
+  // Montos: palos, lucas, k, $, o el número más grande
+  if(m=strip(/\b(\d+(?:[.,]\d+)?)\s*palos?\b/i))amount=Math.round(parseFloat(m[1].replace(',','.'))*1e6);
+  else if(m=strip(/\b(\d+(?:[.,]\d+)?)\s*(?:lucas?|lukas?)\b/i))amount=Math.round(parseFloat(m[1].replace(',','.'))*1000);
+  else if(m=strip(/\b(\d+(?:[.,]\d+)?)\s*k\b/i))amount=Math.round(parseFloat(m[1].replace(',','.'))*1000);
+  else if(m=strip(/\$\s*([\d.,]+)/))amount=parseInt(m[1].replace(/[.,]/g,''))||null;
+  else{
+    const nums=[...t.matchAll(/\b\d{1,3}(?:\.\d{3})+\b|\b\d+\b/g)];
+    let best=null;
+    for(const n of nums){const v=parseInt(n[0].replace(/\./g,''));if(!best||v>best.v)best={v,s:n[0]}}
+    if(best&&best.v>0){amount=best.v;t=t.replace(new RegExp('\\b'+best.s.replace(/\./g,'\\.')+'\\b'),' ')}
+  }
+  // Tipo de presupuesto
+  for(const p of cfg.periodicExpenses||[]){
+    const re=new RegExp('\\b'+p.name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');
+    if(re.test(t)){b=p.id;if(amount===null)amount=p.amount;break}
+  }
+  if(!b){
+    if(strip(/\blibre\b/i))b='libre';
+    else if(strip(/\bfijo\b/i))b='fijo';
+    else b='semanal';
+  }
+  // Descripción: lo que queda, sin conectores colgando en los bordes
+  const stop=['el','la','los','las','de','del','en','a','al','un','una','por','y'];
+  let words=t.split(/\s+/).filter(Boolean);
+  while(words.length&&stop.includes(words[0].toLowerCase()))words.shift();
+  while(words.length&&stop.includes(words[words.length-1].toLowerCase()))words.pop();
+  let desc=words.join(' ')||'Gasto';
+  desc=desc.charAt(0).toUpperCase()+desc.slice(1);
+  return{desc,amount,date,b};
+}
 function nextCode(md){
   const exps=md.expenses||[];
   const max=exps.reduce((m,e)=>{const n=parseInt((e.code||'').split('-')[1]||0);return n>m?n:m},0);
@@ -774,6 +841,16 @@ function render(){
   const fill=document.getElementById('wbar-fill');
   fill.style.width=pct+'%';
   fill.className='wbar-fill '+(pct>=90?'fill-danger':pct>=75?'fill-warn':'fill-ok');
+
+  // Cuánto puedes gastar hoy: lo que queda de la semana ÷ días restantes (solo display)
+  const todayLine=document.getElementById('wbar-today');
+  if(w.cur){
+    const dLeft=Math.max(1,Math.round((new Date(w.end+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)+1);
+    todayLine.classList.remove('hidden');
+    todayLine.innerHTML=w.rem>0
+      ?`💡 Hoy puedes gastar <strong>${fmt(Math.floor(w.rem/dLeft))}</strong> <span>· ${fmt(w.rem)} ÷ ${dLeft} día${dLeft===1?'':'s'}</span>`
+      :`💡 <span>Semana agotada — lo que registres se descontará del Dinero libre al cerrar la semana.</span>`;
+  }else todayLine.classList.add('hidden');
 
   // Dynamic budget type select (periodic expenses)
   const budgetSel=document.getElementById('f-budget');
@@ -1083,6 +1160,51 @@ function renderStats(md,cs){
   const pctInc=md.income?Math.min(100,Math.round(grandTotal/md.income*100)):0;
   const maxW=Math.max(...cs.wcs.map(w=>w.spent),cs.SEMANAL);
 
+  // Proyección de cierre: variable (semanal+libre) al ritmo actual + comprometidos pendientes
+  let projBlock='';
+  {
+    const fmD=new Date(calStats.fm+'T12:00:00'),lsD=new Date(calStats.ls+'T12:00:00'),nowD=new Date(today()+'T12:00:00');
+    if(nowD>=fmD&&nowD<=lsD){
+      const totalDays=Math.round((lsD-fmD)/864e5)+1;
+      const dayN=Math.min(totalDays,Math.round((nowD-fmD)/864e5)+1);
+      const byDay=Array(totalDays).fill(0);
+      exps.forEach(e=>{const i=Math.round((new Date(e.date+'T12:00:00')-fmD)/864e5);if(i>=0&&i<totalDays)byDay[i]+=e.amount});
+      let c=0;const cumArr=byDay.map(v=>c+=v);
+      const spentNow=cumArr[dayN-1];
+      const varSpent=exps.filter(e=>e.b==='semanal'||e.b==='libre').reduce((s,e)=>s+e.amount,0);
+      const varRate=varSpent/dayN;
+      const semRate=exps.filter(e=>e.b==='semanal').reduce((s,e)=>s+e.amount,0)/dayN;
+      const projTotal=Math.round(grandTotal+varRate*(totalDays-dayN)+cs.fixedRem+cs.feriaRem);
+      const dLeftW=Math.max(1,Math.round((new Date(cs.curWeek.end+'T12:00:00')-nowD)/864e5)+1);
+      const projCurW=cs.curWeek.cur?cs.curWeek.spent+semRate*dLeftW:cs.curWeek.spent;
+      const projLibre=Math.round(cs.libreRem+(cs.curWeek.cur?cs.SEMANAL-projCurW:0)+cs.futureWks*(cs.SEMANAL-semRate*7));
+      const pctProj=md.income?Math.round(projTotal/md.income*100):0;
+      const W=300,H=56,maxY=Math.max(projTotal,spentNow,1);
+      const px=i=>(i/(totalDays-1))*W, py=v=>H-4-(v/maxY)*(H-10);
+      const solid=cumArr.slice(0,dayN).map((v,i)=>`${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+      const dash=`${px(dayN-1).toFixed(1)},${py(spentNow).toFixed(1)} ${px(totalDays-1).toFixed(1)},${py(projTotal).toFixed(1)}`;
+      projBlock=`
+      <div class="stat-block">
+        <div class="stat-block-title">Proyección a fin de mes</div>
+        <div style="font-size:.82rem;line-height:1.7;margin-bottom:8px">
+          A tu ritmo actual (~${fmtK(Math.round(varRate))}/día en gasto variable):<br>
+          Gasto total del mes: <strong style="font-family:var(--serif)">${fmt(projTotal)}</strong> <span style="color:var(--muted)">(${pctProj}% del ingreso)</span><br>
+          Dinero libre al cierre: <strong style="font-family:var(--serif);color:${projLibre>=0?'var(--green)':'var(--red)'}">${fmt(projLibre)}</strong>
+        </div>
+        ${projLibre<0?`<div class="alert alert-danger" style="font-size:.78rem">⚠️ A este ritmo cerrarás el mes gastando más de lo presupuestado. Frena el gasto semanal para revertirlo.</div>`:''}
+        <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:56px;display:block" preserveAspectRatio="none">
+          <polyline points="${dash}" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <polyline points="${solid}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+          <circle cx="${px(dayN-1).toFixed(1)}" cy="${py(spentNow).toFixed(1)}" r="3" fill="var(--accent)"/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-top:3px">
+          <span>${fmtDate(calStats.fm)}</span><span>hoy: ${fmtK(spentNow)}</span><span>${fmtDate(calStats.ls)} ≈ ${fmtK(projTotal)}</span>
+        </div>
+        <p style="font-size:.68rem;color:var(--muted);margin-top:6px">Asume que los fijos y dominicales pendientes se pagan según lo planificado y que el gasto libre se mantiene.</p>
+      </div>`;
+    }
+  }
+
   el.innerHTML=`
   <div class="stat-block">
     <div class="stat-block-title">Total gastado · ${calStats.name}</div>
@@ -1096,7 +1218,7 @@ function renderStats(md,cs){
       <span style="color:var(--muted)">${fmt(Math.max(0,md.income-grandTotal))} restante</span>
     </div>
   </div>
-
+  ${projBlock}
   <div class="stat-block">
     <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">
       <span class="stat-block-title" style="margin-bottom:0">Semana a semana</span>
@@ -1184,6 +1306,36 @@ function switchTab(tab,el){
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
+function renderSmartPreview(){
+  const el=document.getElementById('smart-preview');
+  const txt=document.getElementById('f-smart').value;
+  if(!txt.trim()){el.style.display='none';return}
+  const p=parseQuick(txt);
+  el.style.display='flex';
+  if(!p.amount){
+    el.innerHTML='<span>Falta el monto — ej: "almuerzo 8 lucas", "uber 4.500"</span>';
+    return;
+  }
+  const cfg=loadConfig();
+  const peMap=Object.fromEntries((cfg.periodicExpenses||[]).map(x=>[x.id,x.name]));
+  const bLbl={semanal:'Semanal',libre:'Dinero libre',fijo:'Gasto fijo',...peMap};
+  el.innerHTML=`<span>📅 ${fmtDate(p.date)}</span><span>·</span><strong>${p.desc}</strong><span>·</span><strong>${fmt(p.amount)}</strong><span>·</span><span>${bLbl[p.b]||p.b}</span><span class="smart-go">Registrar ↵</span>`;
+}
+function submitSmart(){
+  const inp=document.getElementById('f-smart');
+  const p=parseQuick(inp.value);
+  if(!p)return;
+  if(!p.amount){toast('No detecté el monto. Ej: "almuerzo 8 lucas"','warn');return}
+  document.getElementById('f-date').value=p.date;
+  document.getElementById('f-desc').value=p.desc;
+  document.getElementById('f-amount').value=p.amount;
+  const sel=document.getElementById('f-budget');
+  if([...sel.options].some(o=>o.value===p.b))sel.value=p.b;
+  inp.value='';
+  document.getElementById('smart-preview').style.display='none';
+  addExpense();
+  inp.focus();
+}
 function onBudgetChange(){
   const b=document.getElementById('f-budget').value;
   const am=document.getElementById('f-amount');
@@ -2149,6 +2301,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Enter para registrar gasto
   document.getElementById('f-desc').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('f-amount').focus()});
   document.getElementById('f-amount').addEventListener('keydown',e=>{if(e.key==='Enter')addExpense()});
+  // Entrada rápida en lenguaje natural
+  const smart=document.getElementById('f-smart');
+  smart.addEventListener('input',renderSmartPreview);
+  smart.addEventListener('keydown',e=>{if(e.key==='Enter')submitSmart()});
+  document.getElementById('smart-preview').addEventListener('click',submitSmart);
   // Scroll shadows on the key-numbers row
   const knRow=document.getElementById('kn-row');
   const updateKnFade=()=>{
