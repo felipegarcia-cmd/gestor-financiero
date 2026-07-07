@@ -1439,7 +1439,7 @@ function editExpense(code){
     <label class="label first">Fecha</label>
     <input type="date" id="e-date" value="${e.date}">
     <label class="label">Descripción</label>
-    <input type="text" id="e-desc" value="${e.desc}" autocomplete="off">
+    <input type="text" id="e-desc" value="${e.desc.replace(/"/g,'&quot;')}" autocomplete="off">
     <label class="label">Monto</label>
     <input type="number" id="e-amount" value="${e.amount}" inputmode="decimal">
     <label class="label">Tipo de presupuesto</label>
@@ -2348,7 +2348,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       if(e.target===this){
         this.classList.remove('open');
         if(id==='overlay-confirm'){
-          const f=this.querySelector('.mfooter');if(f)f.style.display='';
+          const f=this.querySelector('.mfooter');
+          if(f){f.style.display='';f.innerHTML=_CONFIRM_FOOTER_HTML}
         }
       }
       if(id==='overlay-settings')render();
