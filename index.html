@@ -891,8 +891,28 @@ function renderAlerts(md,cs){
     const up=buildCal(md.year)[md.month].sun.filter(s=>s<=now&&!paid.includes(s));
     if(up.length)msgs.push({t:'warn',m:`📅 ${p.name}: ${up.length} domingo(s) sin confirmar pago`});
   });
-  el.innerHTML=msgs.map(a=>`<div class="alert alert-${a.t}">${a.m}</div>`).join('');
+  el.innerHTML=msgs.map(a=>`<div class="alert alert-${a.t}">${a.m}</div>`).join('')+backupAlertHTML();
 }
+
+// Recordatorio de respaldo: 30+ días sin exportar (o nunca, con datos acumulados)
+function backupAlertHTML(){
+  const snooze=+localStorage.getItem('gf_backup_snooze')||0;
+  if(Date.now()-snooze<7*864e5)return'';
+  const s=load();
+  const nMonths=Object.keys(s.months||{}).length;
+  const nExp=Object.values(s.months||{}).reduce((n,m)=>n+(m.expenses||[]).length,0);
+  const last=+localStorage.getItem('gf_last_backup')||0;
+  const days=last?Math.floor((Date.now()-last)/864e5):null;
+  const due=last?days>=30:(nMonths>1||nExp>=10);
+  if(!due)return'';
+  const msg=last?`Tu último respaldo fue hace ${days} días.`:'Aún no has exportado ningún respaldo.';
+  return`<div class="alert alert-warn" style="display:flex;align-items:center;gap:8px">
+    <span style="flex:1">💾 ${msg} Tus datos viven solo en este dispositivo.</span>
+    <button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="exportData()">Exportar</button>
+    <button class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:4px 8px" onclick="snoozeBackup()" title="Recordar en 7 días">✕</button>
+  </div>`;
+}
+function snoozeBackup(){localStorage.setItem('gf_backup_snooze',Date.now().toString());render()}
 
 function syncKnRing(){
   const map={semana:'kn-semana-card',libre:'kn-libre-card',comp:'kn-comp-card',cuenta:'kn-cuenta-card'};
@@ -1051,6 +1071,7 @@ function renderFijos(md){
         <input type="checkbox" ${it.paid?'checked':''} onchange="toggleFijo('${key}',${i},this.checked)">
         <span class="fijo-name">${it.name}${it.cuotaNum?` <span style="font-size:.72rem;color:var(--muted)">(${it.cuotaNum}/${it.totalCuotas})</span>`:''}</span>
         <span class="fijo-amount">${fmt(it.amount)}</span>
+        <button class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:4px 8px" onclick="editFijo('${key}',${i})" title="Editar">✎</button>
       </div>`).join('')}
     </div>`;
   }
@@ -1452,6 +1473,34 @@ function toggleFijo(key,idx,checked){
   const md=activeMonth();
   md[key][idx].paid=checked;
   saveMonth(md);render();
+}
+
+function editFijo(key,idx){
+  const md=activeMonth();if(!md)return;
+  const it=(md[key]||[])[idx];if(!it)return;
+  document.getElementById('overlay-edit').classList.add('open');
+  document.getElementById('modal-edit').innerHTML=`
+    <h2>✏️ Editar gasto fijo</h2>
+    <p class="sub">Ajusta el monto real de este mes. No cambia los valores por defecto para meses futuros.</p>
+    <label class="label first">Nombre</label>
+    <input type="text" id="ef-name" value="${it.name.replace(/"/g,'&quot;')}">
+    <label class="label">Monto</label>
+    <input type="number" id="ef-amount" value="${it.amount}" inputmode="decimal">
+    <div class="mfooter">
+      <button class="btn btn-ghost" onclick="document.getElementById('overlay-edit').classList.remove('open')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFijoEdit('${key}',${idx})">Guardar</button>
+    </div>`;
+}
+function saveFijoEdit(key,idx){
+  const md=activeMonth();if(!md)return;
+  const name=document.getElementById('ef-name').value.trim();
+  const amount=parseInt(String(document.getElementById('ef-amount').value).replace(/\./g,''));
+  if(!name||!amount||amount<=0){toast('Completa todos los campos.','danger');return}
+  md[key][idx]={...md[key][idx],name,amount};
+  saveMonth(md);
+  document.getElementById('overlay-edit').classList.remove('open');
+  render();
+  toast('Gasto fijo actualizado ✓','ok');
 }
 
 // ── WIZARD ────────────────────────────────────────────────────────────────────
@@ -2007,6 +2056,10 @@ function closeCurrentMonth(){
       md.status='closed';md.finalBalance=cs.enCuenta;md.closedAt=today();
       saveMonth(md);render();
       toast(`${cal.name} cerrado — saldo: ${fmt(cs.enCuenta)}`,'ok');
+      // Momento natural para respaldar: mes recién cerrado
+      setTimeout(()=>showConfirm('💾 Respaldo mensual',
+        `${cal.name} quedó cerrado. Buen momento para descargar una copia de seguridad de todos tus datos.`,
+        exportData,'Descargar respaldo','btn-primary'),450);
     },'Cerrar mes','btn-primary');
 }
 
@@ -2188,6 +2241,7 @@ function exportData(){
   localStorage.setItem('gf_last_backup',Date.now().toString());
   toast('💾 Respaldo descargado: '+fname,'ok');
   hideConfirm();
+  render();
 }
 function csvEscape(v){
   const s=String(v??'');
@@ -2281,6 +2335,8 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_deferredIn
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded',()=>{
+  // Pedir a iOS/navegador que no desaloje el almacenamiento local
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
   applyTheme(localStorage.getItem('gf_theme')||'auto');
   matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{
     if((localStorage.getItem('gf_theme')||'auto')==='auto')applyTheme('auto');
