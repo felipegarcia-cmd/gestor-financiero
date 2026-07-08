@@ -411,6 +411,7 @@ input[readonly]{background:var(--bg);color:var(--muted)}
     </div>
     <p>Sin estrés, sin rodeos. Configura tu mes en un par de pasos y empieza a registrar tus gastos.</p>
     <button class="btn btn-primary" style="padding:13px 28px;font-size:.95rem;border-radius:14px;margin-top:8px" onclick="openWizard()">Comenzar →</button>
+    <button class="btn btn-ghost" style="border:none;margin-top:2px" onclick="openHelp()">¿Cómo funciona? →</button>
   </div>
 
   <div id="main" class="hidden">
@@ -2095,11 +2096,14 @@ function closeCurrentMonth(){
 function openHelp(){
   const cfg=loadConfig();
   const pes=cfg.periodicExpenses||[];
+  const hasMonth=!!activeMonth();
   document.getElementById('overlay-help').classList.add('open');
   document.getElementById('modal-help').innerHTML=`
     <h2>❓ Cómo funciona Wizard</h2>
     <div class="alert alert-info" style="margin-bottom:16px">
-      🎉 <strong>¡Felicitaciones!</strong> Ya ordenaste tus presupuestos. Ahora te explico cómo funciona Wizard para que le saques el máximo partido.
+      ${hasMonth
+        ?'🎉 <strong>¡Felicitaciones!</strong> Ya ordenaste tus presupuestos. Ahora te explico cómo funciona Wizard para que le saques el máximo partido.'
+        :'👋 <strong>¡Bienvenido!</strong> Antes de configurar tu primer mes, así es como funciona Wizard.'}
     </div>
 
     <div class="help-section">
