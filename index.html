@@ -868,12 +868,18 @@ function render(){
   }
   // If feria tab is active but no periodic expenses, switch to gastos
   const at0=document.querySelector('.bnav-item.active')?.dataset.tab||'gastos';
-  if(at0==='feria'&&!cs.hasPeriodic){switchTab('gastos',document.querySelector('.bnav-item[data-tab="gastos"]'));}
+  let switched=false;
+  if(at0==='feria'&&!cs.hasPeriodic){
+    switchTab('gastos',document.querySelector('.bnav-item[data-tab="gastos"]'));
+    switched=true;
+  }
 
   renderAlerts(md,cs);
   if(activeBreakdown)renderBreakdown(activeBreakdown,md,cs);
-  const at=document.querySelector('.bnav-item.active')?.dataset.tab||'gastos';
-  renderTab(at,md,cs);
+  if(!switched){
+    const at=document.querySelector('.bnav-item.active')?.dataset.tab||'gastos';
+    renderTab(at,md,cs);
+  }
   const fd=document.getElementById('f-date');
   if(!fd.value)fd.value=today();
 }
@@ -2351,8 +2357,8 @@ document.addEventListener('DOMContentLoaded',()=>{
           const f=this.querySelector('.mfooter');
           if(f){f.style.display='';f.innerHTML=_CONFIRM_FOOTER_HTML}
         }
+        if(id==='overlay-settings')render();
       }
-      if(id==='overlay-settings')render();
     });
   });
   // Enter para registrar gasto
