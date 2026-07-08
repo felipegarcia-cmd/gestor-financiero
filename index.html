@@ -854,14 +854,12 @@ function render(){
   fill.style.width=pct+'%';
   fill.className='wbar-fill '+(pct>=90?'fill-danger':pct>=75?'fill-warn':'fill-ok');
 
-  // Cuánto puedes gastar hoy: lo que queda de la semana ÷ días restantes (solo display)
+  // Cuánto has gastado hoy dentro del presupuesto semanal (solo display)
   const todayLine=document.getElementById('wbar-today');
   if(w.cur){
-    const dLeft=Math.max(1,Math.round((new Date(w.end+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)+1);
+    const todaySpent=(md.expenses||[]).filter(e=>e.b==='semanal'&&e.date===today()).reduce((s,e)=>s+e.amount,0);
     todayLine.classList.remove('hidden');
-    todayLine.innerHTML=w.rem>0
-      ?`💡 Hoy puedes gastar <strong>${fmt(Math.floor(w.rem/dLeft))}</strong> <span>· ${fmt(w.rem)} ÷ ${dLeft} día${dLeft===1?'':'s'}</span>`
-      :`💡 <span>Semana agotada — lo que registres se descontará del Dinero libre al cerrar la semana.</span>`;
+    todayLine.innerHTML=`🧾 Hoy has gastado <strong>${fmt(todaySpent)}</strong> <span>de tu presupuesto semanal</span>`;
   }else todayLine.classList.add('hidden');
 
   // Dynamic budget type select (periodic expenses)
