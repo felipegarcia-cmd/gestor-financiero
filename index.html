@@ -286,7 +286,6 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 
 @media(max-width:480px){
   .form-row{grid-template-columns:122px 1fr 86px;gap:6px}
-  .form-row input[type=date]{font-size:.8rem}
   .kn-hint{display:none}
   .stab{padding:8px 7px;font-size:.78rem}
 }
@@ -1120,7 +1119,11 @@ function renderFeria(md,cs){
       </div>
       ${cal.sun.map(sun=>{
         const isPaid=paid.includes(sun),isPast=sun<=now;
-        const st=isPaid?`<span class="status-paid">✓ Pagado</span>`:isPast?`<span style="display:flex;align-items:center;gap:8px"><span class="status-pend">⚠️ Pendiente</span><button class="btn btn-primary btn-sm" onclick="quickPayPeriodic('${sun}','${p.id}')">Pagar →</button></span>`:`<span class="status-next">Próximo</span>`;
+        const st=isPaid
+          ?`<span class="status-paid">✓ Pagado</span>`
+          :isPast
+            ?`<span style="display:flex;align-items:center;gap:8px"><span class="status-pend">⚠️ Pendiente</span><button class="btn btn-primary btn-sm" onclick="quickPayPeriodic('${sun}','${p.id}')">Pagar →</button></span>`
+            :`<span style="display:flex;align-items:center;gap:8px"><span class="status-next">Próximo</span><button class="btn btn-ghost btn-sm" onclick="quickPayPeriodic('${sun}','${p.id}')">Pagar antes →</button></span>`;
         return`<div class="feria-item">
           <div style="${isPaid?'color:var(--muted);':''}font-size:.88rem;font-weight:500">${fmtDateLong(sun)}</div>${st}</div>`;
       }).join('')}
@@ -1393,8 +1396,8 @@ function addExpense(){
   const cal=buildCal(md.year)[md.month];
   const cfg2=loadConfig();
   const isPeriodic=(cfg2.periodicExpenses||[]).some(p=>p.id===b);
-  const expM=parseInt(date.split('-')[1]),expY=parseInt(date.split('-')[0]);
-  const needsDateWarn=expM!==md.month||expY!==md.year;
+  // El mes real va de cal.fm a cal.ls (incluye días de la semana colgada en el mes calendario vecino)
+  const needsDateWarn=date<cal.fm||date>cal.ls;
   const needsColWarn=cal.col&&date>=cal.col.s&&date<=cal.col.e&&isPeriodic;
 
   const doSave=()=>{
