@@ -734,6 +734,9 @@ function toast(msg,type='ok'){
 function showConfirm(title,body,onOk,btnLabel='Confirmar',btnCls='btn-danger'){
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-body').innerHTML=body;
+  // El menú "Más" reutiliza este mismo overlay y oculta el footer; restaurarlo siempre que se pida un confirm real
+  const footer=document.querySelector('#overlay-confirm .mfooter');
+  if(footer)footer.style.display='';
   const btn=document.getElementById('confirm-ok');
   btn.textContent=btnLabel;btn.className='btn '+btnCls;
   btn.onclick=()=>{hideConfirm();onOk()};
@@ -2234,7 +2237,7 @@ function openMoreMenu(){
     {ico:'❓',label:'Instrucciones',fn:'openHelp();hideConfirm();'},
     {ico:'➕',label:'Nuevo mes',fn:'openWizard();hideConfirm();'},
   ];
-  if(md&&md.status!=='closed')items.push({ico:'✅',label:'Cerrar mes',fn:'closeCurrentMonth();hideConfirm();'});
+  if(md&&md.status!=='closed')items.push({ico:'✅',label:'Cerrar mes',fn:'closeCurrentMonth();'});
   items.push({ico:'💾',label:'Exportar copia de seguridad',fn:'exportData();'});
   items.push({ico:'📄',label:'Exportar gastos (CSV)',fn:'exportCSV();'});
   items.push({ico:'📂',label:'Importar copia de seguridad',fn:'importData();'});
