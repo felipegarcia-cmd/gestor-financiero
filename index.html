@@ -105,7 +105,8 @@ body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:v
 .wbar-today span{color:var(--muted);font-size:.72rem}
 
 /* Form */
-.form-row{display:grid;grid-template-columns:128px 1fr 110px;gap:8px;margin-bottom:8px}
+.form-row-date{margin-bottom:8px}
+.form-row-dm{display:grid;grid-template-columns:1fr 110px;gap:8px;margin-bottom:8px}
 .form-row2{display:grid;grid-template-columns:1fr 120px;gap:8px}
 .quick-add{padding:14px}
 .quick-add .sec-title{margin-bottom:10px}
@@ -285,8 +286,7 @@ input[readonly]{background:var(--bg);color:var(--muted)}
 #tab-gastos,#tab-semanas,#tab-fijos,#tab-feria,#tab-stats{transition:opacity .14s}
 
 @media(max-width:480px){
-  .form-row{grid-template-columns:138px 1fr 76px;gap:6px}
-  .form-row input[type=date]{font-size:.82rem}
+  .form-row-dm{grid-template-columns:1fr 96px;gap:6px}
   .kn-hint{display:none}
   .stab{padding:8px 7px;font-size:.78rem}
 }
@@ -454,8 +454,8 @@ input[readonly]{background:var(--bg);color:var(--muted)}
       <div class="sec-title">Registrar gasto</div>
       <input type="text" id="f-smart" placeholder='⚡ Escribe rápido: "almuerzo 8 lucas ayer"' autocomplete="off">
       <div id="smart-preview" class="smart-preview" style="display:none"></div>
-      <div class="form-row">
-        <input type="date" id="f-date">
+      <div class="form-row-date"><input type="date" id="f-date"></div>
+      <div class="form-row-dm">
         <input type="text" id="f-desc" placeholder="Descripción" autocomplete="off">
         <input type="number" id="f-amount" placeholder="Monto" min="1" inputmode="decimal">
       </div>
